@@ -1,0 +1,604 @@
+{
+    "measurements": {
+        "OBW_and_SBW":{
+            "49_27_3": {
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "center_freq": "7.9935GHz",
+                            "span": "2.439GHz",
+                            "detector": "POS",
+                            "trace_mode": "MAXH",
+                            "RBW": "1MHz",
+                            "VBW": "1MHz",
+                            "sweep_time": "150ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    }
+                },
+                "standard": {
+                    "obw": "813MHz",
+                    "obw_lower_freq": "7.587GHz",
+                    "obw_upper_freq": "8.4GHz",
+                    "obw_occup_thre": "0.99",
+                    "sbw": "450MHz",
+                    "sbw_power_thre": "0.1"
+                }
+            },
+            "49_27_4": {
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "center_freq": "8.125GHz",
+                            "span": "5.25GHz",
+                            "detector": "POS",
+                            "trace_mode": "MAXH",
+                            "RBW": "1MHz",
+                            "VBW": "1MHz",
+                            "sweep_time": "150ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    }
+                },
+                "standard": {
+                    "obw": "1750MHz",
+                    "obw_lower_freq": "7.25GHz",
+                    "obw_upper_freq": "9GHz",
+                    "obw_occup_thre": "0.99",
+                    "sbw": "450MHz",
+                    "sbw_power_thre": "0.1"
+                }
+            } 
+        },
+        "peak_power": {
+            "49_27_3": {
+                "search": {
+                    "configure": {
+                        "center_freq": "7.9935GHz",
+                        "span": "813MHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "RBW": "3MHz",
+                        "VBW": "10MHz",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "POS",
+                            "trace_mode": "MAXH",
+                            "RBW": "3MHz",
+                            "VBW": "10MHz",
+                            "sweep_time": "AUTO ON",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    },
+                    "exception": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "POS",
+                            "trace_mode": "MAXH",
+                            "RBW": "50MHz",
+                            "VBW": "80MHz",
+                            "sweep_time": "AUTO ON",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    }
+                },
+                "standard": {
+                    "limitation": "0dBm/50MHz",
+                    "allowable_dev": "20%"
+                }
+            },
+            "49_27_4": {
+                "search": {
+                    "configure": {
+                        "center_freq": "8.125GHz",
+                        "span": "1.75GHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "RBW": "3MHz",
+                        "VBW": "10MHz",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "POS",
+                            "trace_mode": "MAXH",
+                            "RBW": "3MHz",
+                            "VBW": "10MHz",
+                            "sweep_time": "AUTO ON",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    },
+                    "exception": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "POS",
+                            "trace_mode": "MAXH",
+                            "RBW": "50MHz",
+                            "VBW": "80MHz",
+                            "sweep_time": "AUTO ON",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    }
+                },
+                "standard": {
+                    "limitation": "0dBm/50MHz",
+                    "allowable_dev": "20%"
+                }
+            }
+        },
+        "average_power": {
+            "49_27_3": {
+                "search": {
+                    "configure": {
+                        "center_freq": "7.9935GHz",
+                        "span": "813MHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "zoom_in": {
+                    "configure": {
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "span": "0Hz",
+                            "detector": "SMP",
+                            "RBW": "1MHz",
+                            "VBW": "3MHz",
+                            "sweep_time": "10ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "OFF"
+                        }
+                    },
+                    "exception": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "RMS",
+                            "trace_mode": "MAXH",
+                            "RBW": "1MHz",
+                            "VBW": "3MHz",
+                            "sweep_time": "1000ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    }
+                },
+                "standard": {
+                    "limitation1": "-51.3dBm/1MHz",
+                    "limitation2": "-41.3dBm/1MHz",
+                    "dividing_freq": "7.662GHz",
+                    "allowable_dev": "20%"
+                }
+            },
+            "49_27_4": {
+                "search": {
+                    "configure": {
+                        "center_freq": "8.125GHz",
+                        "span": "1.75GHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "zoom_in": {
+                    "configure": {
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "SMP",
+                            "RBW": "1MHz",
+                            "VBW": "3MHz",
+                            "sweep_time": "10ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "OFF"
+                        }
+                    },
+                    "exception": {
+                        "configure": {
+                            "span": "100MHz",
+                            "detector": "RMS",
+                            "trace_mode": "MAXH",
+                            "RBW": "1MHz",
+                            "VBW": "3MHz",
+                            "sweep_time": "1000ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "ON"
+                        }
+                    }
+                },
+                "standard": {
+                    "limitation": "-41.3dBm/1MHz",
+                    "allowable_dev": "20%"
+                }
+            }
+        },
+        "spurious": {
+            "49_27_3": {
+                "intervals": {
+                    "30MHz~1600MHz": {
+                        "start_freq": "30MHz",
+                        "stop_freq": "1600MHz"
+                    },
+                    "1600MHz~2700MHz": {
+                        "start_freq": "1600MHz",
+                        "stop_freq": "2700MHz"
+                    },
+                    "2700MHz~7.25GHz": {
+                        "start_freq": "2700MHz",
+                        "stop_freq": "7.25GHz"
+                    },
+                    "7.25GHz~7.587GHz": {
+                        "start_freq": "7.25GHz",
+                        "stop_freq": "7.587GHz"
+                    },
+                    "8.4GHz~8.5GHz": {
+                        "start_freq": "8.4GHz",
+                        "stop_freq": "8.5GHz"
+                    },
+                    "8.5GHz~10.25GHz": {
+                        "start_freq": "8.5GHz",
+                        "stop_freq": "10.25GHz"
+                    },
+                    "10.25GHz~10.6GHz": {
+                        "start_freq": "10.25GHz",
+                        "stop_freq": "10.6GHz"
+                    },
+                    "10.6GHz~10.7GHz": {
+                        "start_freq": "10.6GHz",
+                        "stop_freq": "10.7GHz"
+                    },
+                    "10.7GHz~11.7GHz": {
+                        "start_freq": "10.7GHz",
+                        "stop_freq": "11.7GHz"
+                    },
+                    "11.7GHz~12.75GHz": {
+                        "start_freq": "11.7GHz",
+                        "stop_freq": "12.75GHz"
+                    },
+                    "12.75GHz~26GHz": {
+                        "start_freq": "12.75GHz",
+                        "stop_freq": "26GHz"
+                    }
+                },
+                "search": {
+                    "configure": {
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "zoom_in": {
+                    "configure": {
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "span": "0Hz",
+                            "RBW": "1MHz",
+                            "VBW": "3MHz",
+                            "detector": "SMP",
+                            "sweep_time": "10ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "OFF"
+                        }
+                    }
+                },
+                "standard": {
+                    "30MHz~1600MHz": {
+                        "average": "-90dBm/1MHz",
+                        "peak":"-84dBm/50MHz"
+                    },
+                    "1600MHz~2700MHz": {
+                        "average": "-85dBm/1MHz",
+                        "peak": "-79dBm/50MHz"
+                    },
+                    "2700MHz~7.25GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    },
+                    "7.25GHz~7.587GHz": {
+                        "average": "-59.3dBm/1MHz",
+                        "peak": "-35dBm/50MHz"
+                    },
+                    "8.4GHz~8.5GHz": {
+                        "average": "-59.3dBm/1MHz",
+                        "peak": "-35dBm/50MHz"
+                    },
+                    "8.5GHz~10.25GHz": {
+                        "average": "-60dBm/1MHz",
+                        "peak": "-35.7dBm/50MHz"
+                    },
+                    "10.25GHz~10.6GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    },
+                    "10.6GHz~10.7GHz": {
+                        "average": "-85dBm/1MHz",
+                        "peak": "-79dBm/50MHz"
+                    },
+                    "10.7GHz~11.7GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    },
+                    "11.7GHz~12.75GHz": {
+                        "average": "-85dBm/1MHz",
+                        "peak": "-79dBm/50MHz"
+                    },
+                    "12.75GHz~26GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    }
+                }
+            },
+            "49_27_4": {
+                "intervals": {
+                    "30MHz~1600MHz": {
+                        "start_freq": "30MHz",
+                        "stop_freq": "1600MHz"
+                    },
+                    "1600MHz~2700MHz": {
+                        "start_freq": "1600MHz",
+                        "stop_freq": "2700MHz"
+                    },
+                    "2700MHz~7.25GHz": {
+                        "start_freq": "2700MHz",
+                        "stop_freq": "7.25GHz"
+                    },
+                    "9.0GHz~10.25GHz": {
+                        "start_freq": "9.0GHz",
+                        "stop_freq": "10.25GHz"
+                    },
+                    "10.25GHz~10.6GHz": {
+                        "start_freq": "10.25GHz",
+                        "stop_freq": "10.6GHz"
+                    },
+                    "10.6GHz~10.7GHz": {
+                        "start_freq": "10.6GHz",
+                        "stop_freq": "10.7GHz"
+                    },
+                    "10.7GHz~11.7GHz": {
+                        "start_freq": "10.7GHz",
+                        "stop_freq": "11.7GHz"
+                    },
+                    "11.7GHz~12.75GHz": {
+                        "start_freq": "11.7GHz",
+                        "stop_freq": "12.75GHz"
+                    },
+                    "12.75GHz~26GHz": {
+                        "start_freq": "12.75GHz",
+                        "stop_freq": "26GHz"
+                    }
+                },
+                "search": {
+                    "configure": {
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "zoom_in": {
+                    "configure": {
+                        "RBW": "1MHz",
+                        "VBW": "3MHz",
+                        "detector": "POS",
+                        "trace_mode": "MAXH",
+                        "sweep_time": "AUTO ON",
+                        "sweep_points": "1001",
+                        "continues_sweep": "ON"
+                    }
+                },
+                "measure": {
+                    "general": {
+                        "configure": {
+                            "span": "0Hz",
+                            "RBW": "1MHz",
+                            "VBW": "3MHz",
+                            "detector": "SMP",
+                            "sweep_time": "10ms",
+                            "sweep_points": "1001",
+                            "continues_sweep": "OFF"
+                        }
+                    }
+                },
+                "standard": {
+                    "30MHz~1600MHz": {
+                        "average": "-90dBm/1MHz",
+                        "peak": "-84dBm/50MHz"
+                    },
+                    "1600MHz~2700MHz": {
+                        "average": "-85dBm/1MHz",
+                        "peak": "-79dBm/50MHz"
+                    },
+                    "2700MHz~7.25GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    },
+                    "9.0GHz~10.25GHz": {
+                        "average": "-60dBm/1MHz",
+                        "peak": "-35.7dBm/50MHz"
+                    },
+                    "10.25GHz~10.6GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    },
+                    "10.6GHz~10.7GHz": {
+                        "average": "-85dBm/1MHz",
+                        "peak": "-79dBm/50MHz"
+                    },
+                    "10.7GHz~11.7GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    },
+                    "11.7GHz~12.75GHz": {
+                        "average": "-85dBm/1MHz",
+                        "peak": "-79dBm/50MHz"
+                    },
+                    "12.75GHz~26GHz": {
+                        "average": "-70dBm/1MHz",
+                        "peak": "-64dBm/50MHz"
+                    }
+                }
+            }
+        },
+        "mask": {
+            "49_27_3": {
+                "30MHz~1600MHz": {
+                    "average": "-90dBm/1MHz",
+                    "peak":"-84dBm/50MHz"
+                },
+                "1600MHz~2700MHz": {
+                    "average": "-85dBm/1MHz",
+                    "peak": "-79dBm/50MHz"
+                },
+                "2700MHz~7.25GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                },
+                "7.25GHz~7.587GHz": {
+                    "average": "-59.3dBm/1MHz",
+                    "peak": "-35dBm/50MHz"
+                },
+                "7.587GHz~7.662GHz": {
+                    "average": "-51.3dBm/1MHz",
+                    "peak": "-0dBm/50MHz"
+                },
+                "7.662GHz~8.4GHz": {
+                    "average": "-41.3dBm/1MHz",
+                    "peak": "-0dBm/50MHz"
+                },
+                "8.4GHz~8.5GHz": {
+                    "average": "-59.3dBm/1MHz",
+                    "peak": "-35dBm/50MHz"
+                },
+                "8.5GHz~10.25GHz": {
+                    "average": "-60dBm/1MHz",
+                    "peak": "-35.7dBm/50MHz"
+                },
+                "10.25GHz~10.6GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                },
+                "10.6GHz~10.7GHz": {
+                    "average": "-85dBm/1MHz",
+                    "peak": "-79dBm/50MHz"
+                },
+                "10.7GHz~11.7GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                },
+                "11.7GHz~12.75GHz": {
+                    "average": "-85dBm/1MHz",
+                    "peak": "-79dBm/50MHz"
+                },
+                "12.75GHz~26GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                }  
+            },
+            "49_27_4": {
+                "30MHz~1600MHz": {
+                    "average": "-90dBm/1MHz",
+                    "peak": "-84dBm/50MHz"
+                },
+                "1600MHz~2700MHz": {
+                    "average": "-85dBm/1MHz",
+                    "peak": "-79dBm/50MHz"
+                },
+                "2700MHz~7.25GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                },
+                "7.25GHz~9GHz": {
+                    "average": "-41.3dBm/1MHz",
+                    "peak": "0dBm/50MHz"
+                },
+                "9.0GHz~10.25GHz": {
+                    "average": "-60dBm/1MHz",
+                    "peak": "-35.7dBm/50MHz"
+                },
+                "10.25GHz~10.6GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                },
+                "10.6GHz~10.7GHz": {
+                    "average": "-85dBm/1MHz",
+                    "peak": "-79dBm/50MHz"
+                },
+                "10.7GHz~11.7GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                },
+                "11.7GHz~12.75GHz": {
+                    "average": "-85dBm/1MHz",
+                    "peak": "-79dBm/50MHz"
+                },
+                "12.75GHz~26GHz": {
+                    "average": "-70dBm/1MHz",
+                    "peak": "-64dBm/50MHz"
+                }
+            }
+        }
+    }
+}

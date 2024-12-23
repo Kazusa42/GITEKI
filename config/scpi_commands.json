@@ -1,0 +1,18 @@
+{
+    "scpi_cmds": {
+        "center_freq": "FREQ:CENT",
+        "start_freq": "FREQ:STAR",
+        "stop_freq": "FREQ:STOP",
+        "span": "FREQ:SPAN",
+        "detector": "DET",
+        "RBW": "BAND:RES",
+        "VBW": "BAND:VID",
+        "trace_mode": "DISP:WIND:TRAC:MODE",
+        "sweep_time": "SWE:TIME",
+        "sweep_points": "SWE:POIN",
+        "continues_sweep": "INIT:CONT",
+        "yaxis_ref_level": "DISP:WIND:TRAC:Y:RLEV",
+        "obw_percent": "POW:BWID",
+        "obw_measure": "CALC:MARK:FUNC:POW"
+    }
+}
