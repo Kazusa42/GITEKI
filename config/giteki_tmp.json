@@ -51,231 +51,99 @@
         "49_27_3": {
             "occupied_freq_band": "7.587GHz~8.4GHz",
             "0.03GHz~1.6GHz": {
-                "freq": {
-                    "start_freq": "30MHz",
-                    "stop_freq": "1600MHz"
-                },
-                "limit": {
-                    "peak": "-84dBm/50MHz",
-                    "average": "-90dBm/1MHz"
-                }
+                "peak": "-84dBm/50MHz",
+                "average": "-90dBm/1MHz"
             },
             "1.6GHz~2.7GHz": {
-                "freq": {
-                    "start_freq": "1600MHz",
-                    "stop_freq": "2700MHz"
-                },
-                "limit": {
-                    "peak": "-79dBm/50MHz",
-                    "average": "-85dBm/1MHz"
-                }
+                "peak": "-79dBm/50MHz",
+                "average": "-85dBm/1MHz"
             },
             "2.7GHz~7.25GHz": {
-                "freq": {
-                    "start_freq": "2700MHz",
-                    "stop_freq": "7.25GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             },
             "7.25GHz~7.587GHz": {
-                "freq": {
-                    "start_freq": "7.25GHz",
-                    "stop_freq": "7.587GHz"
-                },
-                "limit": {
-                    "peak": "-35dBm/50MHz",
-                    "average": "-59.3dBm/1MHz"
-                }
+                "peak": "-35dBm/50MHz",
+                "average": "-59.3dBm/1MHz"
             },
             "7.587GHz~8.4GHz": {
-                "freq": {
-                    "start_freq": "7.587GHz",
-                    "stop_freq": "8.4GHz"
-                },
-                "limit": {
-                    "peak": "0dBm/50MHz",
-                    "average1": "-51.3dBm/1MHz",
-                    "average2": "-41.3dBm/1MHz",
-                    "dividing_freq": "7.662GHz",
-                    "allowable_dev": "20%"
-                }
+                "peak": "0dBm/50MHz",
+                "average1": "-51.3dBm/1MHz",
+                "average2": "-41.3dBm/1MHz",
+                "dividing_freq": "7.662GHz",
+                "allowable_dev": "20%"
             },
             "8.4GHz~8.5GHz": {
-                "freq": {
-                    "start_freq": "8.4GHz",
-                    "stop_freq": "8.5GHz"
-                },
-                "limit": {
-                    "peak": "-35dBm/50MHz",
-                    "average": "-59.3dBm/1MHz"
-                }
+                "peak": "-35dBm/50MHz",
+                "average": "-59.3dBm/1MHz"
             },
             "8.5GHz~10.25GHz": {
-                "freq": {
-                    "start_freq": "8.5GHz",
-                    "stop_freq": "10.25GHz"
-                },
-                "limit": {
-                    "peak": "-35.7dBm/50MHz",
-                    "average": "-60dBm/1MHz"
-                }
+                "peak": "-35.7dBm/50MHz",
+                "average": "-60dBm/1MHz"
             },
             "10.25GHz~10.6GHz": {
-                "freq": {
-                    "start_freq": "10.25GHz",
-                    "stop_freq": "10.6GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             },
             "10.6GHz~10.7GHz": {
-                "freq": {
-                    "start_freq": "10.6GHz",
-                    "stop_freq": "10.7GHz"
-                },
-                "limit": {
-                    "peak": "-79dBm/50MHz",
-                    "average": "-85dBm/1MHz"
-                }
+                "peak": "-79dBm/50MHz",
+                "average": "-85dBm/1MHz"
             },
             "10.7GHz~11.7GHz": {
-                "freq": {
-                    "start_freq": "10.7GHz",
-                    "stop_freq": "11.7GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             },
             "11.7GHz~12.75GHz": {
-                "freq": {
-                    "start_freq": "11.7GHz",
-                    "stop_freq": "12.75GHz"
-                },
-                "limit": {
-                    "peak": "-79dBm/50MHz",
-                    "average": "-85dBm/1MHz"
-                }
+                "peak": "-79dBm/50MHz",
+                "average": "-85dBm/1MHz"
             },
             "12.75GHz~26GHz": {
-                "freq": {
-                    "start_freq": "12.75GHz",
-                    "stop_freq": "26GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             }
         },
         "49_27_4": {
             "occupied_freq_band": "7.25GHz~9.0GHz",
             "0.03GHz~1.6GHz": {
-                "freq": {
-                    "start_freq": "30MHz",
-                    "stop_freq": "1600MHz"
-                },
-                "limit": {
-                    "peak": "-84dBm/50MHz",
-                    "average": "-90dBm/1MHz"
-                }
+                "peak": "-84dBm/50MHz",
+                "average": "-90dBm/1MHz"
             },
             "1.6GHz~2.7GHz": {
-                "freq": {
-                    "start_freq": "1600MHz",
-                    "stop_freq": "2700MHz"
-                },
-                "limit": {
-                    "peak": "-79dBm/50MHz",
-                    "average": "-85dBm/1MHz"
-                }
+                "peak": "-79dBm/50MHz",
+                "average": "-85dBm/1MHz"
             },
             "2.7GHz~7.25GHz": {
-                "freq": {
-                    "start_freq": "2700MHz",
-                    "stop_freq": "7.25GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             },
             "7.25GHz~9.0GHz": {
-                "freq": {
-                    "start_freq": "7.25GHz",
-                    "stop_freq": "9.0GHz"
-                },
-                "limit": {
-                    "peak": "0dBm/50MHz",
-                    "average": "-41.3dBm/1MHz",
-                    "allowable_dev": "20%"
-                }
+                "peak": "0dBm/50MHz",
+                "average": "-41.3dBm/1MHz",
+                "allowable_dev": "20%"
             },
             "9.0GHz~10.25GHz": {
-                "freq": {
-                    "start_freq": "9.0GHz",
-                    "stop_freq": "10.25GHz"
-                },
-                "limit": {
-                    "peak": "-35.7dBm/50MHz",
-                    "average": "-60dBm/1MHz"
-                }
+                "peak": "-35.7dBm/50MHz",
+                "average": "-60dBm/1MHz"
             },
             "10.25GHz~10.6GHz": {
-                "freq": {
-                    "start_freq": "10.25GHz",
-                    "stop_freq": "10.6GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             },
             "10.6GHz~10.7GHz": {
-                "freq": {
-                    "start_freq": "10.6GHz",
-                    "stop_freq": "10.7GHz"
-                },
-                "limit": {
-                    "peak": "-79dBm/50MHz",
-                    "average": "-85dBm/1MHz"
-                }
+                "peak": "-79dBm/50MHz",
+                "average": "-85dBm/1MHz"
             },
             "10.7GHz~11.7GHz": {
-                "freq": {
-                    "start_freq": "10.7GHz",
-                    "stop_freq": "11.7GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             },
             "11.7GHz~12.75GHz": {
-                "freq": {
-                    "start_freq": "11.7GHz",
-                    "stop_freq": "12.75GHz"
-                },
-                "limit": {
-                    "peak": "-79dBm/50MHz",
-                    "average": "-85dBm/1MHz"
-                }
+                "peak": "-79dBm/50MHz",
+                "average": "-85dBm/1MHz"
             },
             "12.75GHz~26GHz": {
-                "freq": {
-                    "start_freq": "12.75GHz",
-                    "stop_freq": "26GHz"
-                },
-                "limit": {
-                    "peak": "-64dBm/50MHz",
-                    "average": "-70dBm/1MHz"
-                }
+                "peak": "-64dBm/50MHz",
+                "average": "-70dBm/1MHz"
             }
         }
     }
