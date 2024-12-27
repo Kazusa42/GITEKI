@@ -31,78 +31,51 @@ class TraceDataCalculator:
     """
     A class to calculate OBW, SBW and average power
     """
-    def __init__(self, file_path: str) -> None:
+    def __init__(self) -> None:
+        self.data = pd.DataFrame()
 
-        if file_path.endswith('.csv'):
-            self.df = pd.read_csv(file_path, header=None)
-        elif file_path.endswith('.xlsx'):
-            self.df = pd.read_excel(file_path, header=None)
-        else:
-            raise ValueError("Unsupported file format. Please use .csv or .xlsx file.")
-
-        # Load and process data file
+    def read_trace_data(self, file_path: str):
+        # load raw data from csv file
+        self.df = pd.read_csv(file_path, header=None)
         self.df = self.df.apply(pd.to_numeric, errors='coerce')
-        self.data = self._extract_data()
 
-    def _extract_data(self) -> pd.DataFrame:
-        # Find the first row where the first column can be converted to numeric
+        # extract valid data
         data_header_index = self.df[0].apply(pd.to_numeric, errors='coerce').first_valid_index()
-        data = self.df.iloc[data_header_index:, :2]
-        data.columns = ['frequency', 'power_dbm']
-        data['power_mW'] = 10 ** (data['power_dbm'] / 10.0)  # Convert dBm to mW
-        return data
+        self.data = self.df.iloc[data_header_index:, :2]
+        self.data.columns = ['freq', 'pow_dBm']
+        self.data['pow_mW'] = 10 ** (self.data['pow_dBm'] / 10.0)  # Convert dBm to mW
     
-    def calculate_obw(self, standard: dict) -> dict:
-        
+    def calculate_obw(self, obw_power_percent=0.99) -> dict:
         # Compute cumulative power percentage
-        cumulative_percentage = self.data['power_mW'].cumsum() / self.data['power_mW'].sum()
+        cumulative_percent = self.data['pow_mW'].cumsum() / self.data['pow_mW'].sum()
+        thre = (1 - float(obw_power_percent)) / 2.0
 
-        occup_thre = (1 - float(standard.get('obw_occup_thre'))) / 2.0
+        # Determine OBW freq bounds based on cumulative power percentage
+        lower_freq = self.data.loc[cumulative_percent <= thre, 'freq'].iloc[-1] / 1e9       # GHz
+        upper_freq = self.data.loc[cumulative_percent >= (1 - thre), 'freq'].iloc[0] / 1e9  # GHz
+        obw = round((upper_freq - lower_freq) * 1e3, 2)  # MHz
+        return obw, lower_freq, upper_freq
 
-        # Determine OBW frequency bounds based on cumulative power percentage
-        lower_freq = self.data.loc[cumulative_percentage <= occup_thre, 'frequency'].iloc[-1] / 1e9
-        upper_freq = self.data.loc[cumulative_percentage >= (1 - occup_thre), 'frequency'].iloc[0] / 1e9
-        obw = round((upper_freq - lower_freq) * 1e3, 2)
-
-        lower_freq_status = "Passed" if lower_freq >= float(standard.get('obw_lower_freq').split('GHz')[0]) else "Failed"
-        upper_freq_status = "Passed" if upper_freq <= float(standard.get('obw_upper_freq').split('GHz')[0]) else "Failed"
-        obw_status = "Passed" if obw <= float(standard.get('obw').split('MHz')[0]) else "Failed"
-
-        return {
-            "Occupied Bandwidth (OBW)": [f"{obw}MHz", obw_status],
-            "Lower OBW Frequency": [f"{lower_freq}GHz", lower_freq_status],
-            "Upper OBW Frequency": [f"{upper_freq}GHz", upper_freq_status],
-        }
-
-    def calculate_sbw(self, standard: dict) -> dict:
-        max_power = self.data['power_mW'].max()
-        power_limit = max_power * float(standard.get('sbw_power_thre'))
+    def calculate_sbw(self, sbw_power_thre=0.1) -> dict:
+        max_power = self.data['pow_mW'].max()
+        power_limit = max_power * float(sbw_power_thre)
         
         # Find indices for SBW boundaries
-        lower_index = self.data.index[self.data['power_mW'] > power_limit][0] - 1
-        upper_index = self.data.index[self.data['power_mW'] > power_limit][-1] + 1
+        lower_index = self.data.index[self.data['pow_mW'] > power_limit][0] - 1
+        upper_index = self.data.index[self.data['pow_mW'] > power_limit][-1] + 1
         
-        lower_sbw = self.data.at[lower_index, 'frequency'] / 1e9
-        upper_sbw = self.data.at[upper_index, 'frequency'] / 1e9
-        sbw = round((upper_sbw - lower_sbw) * 1e3, 2)
-        sbw_status = 'Passed' if sbw >= float(standard.get('sbw').split('MHz')[0]) else 'Failed'
-        
-        return {
-            "Spreading Bandwidth (SBW)": [f"{sbw}MHz", sbw_status],
-            "Lower SBW Frequency": f"{lower_sbw}GHz",
-            "Upper SBW Frequency": f"{upper_sbw}GHz",       
-        }
+        lower_sbw = self.data.at[lower_index, 'freq']
+        upper_sbw = self.data.at[upper_index, 'freq']
+        sbw = round((upper_sbw - lower_sbw) / 1e6, 2)  # MHz
+        return sbw
     
     def calculate_ave_power(self, window_size=100) -> float:
-        moving_ave = self.data.iloc[:, 2].rolling(window_size).mean()
+        moving_ave = self.data['pow_mW'].rolling(window_size).mean()
         return 10 * math.log10(moving_ave.max())
     
     def calculate_ave_spurious(self, threshold=0.5) -> float:
-        mW_power = self.data.iloc[:, 2]
-        peak = mW_power.max()
-
-        filtered_power = mW_power[mW_power >= (peak * threshold)]
-        filtered_power.mean()
+        mW_power = self.data['pow_mW']
+        filtered_power = mW_power[mW_power >= (mW_power.max() * threshold)]
         return 10 * math.log10(filtered_power.mean())
 
 
@@ -113,7 +86,7 @@ class TracePlot:
         self._verify_trace_data_integrity(self._trace_files)
         self._trace_data, self._data_density = self._load_trace_data()
         self.sampled_trace_data = self._sampling()
-        self.sampled_trace_data.columns = ['frequency', 'power_dbm']
+        self.sampled_trace_data.columns = ['freq', 'pow_dBm']
 
     @staticmethod
     def _sort_trace_data(trace_data_absdir: str, freq_pattern=r'\((.*?)\)'):
@@ -139,7 +112,7 @@ class TracePlot:
 
     @staticmethod
     def _convert_freq_to_ghz(freq_str: str) -> float:
-        """Convert frequency from string to GHz."""
+        """Convert freq from string to GHz."""
         freq_value, unit = float(freq_str[:-1]), freq_str[-1]
         return freq_value if unit == 'G' else freq_value / 1e3
 
@@ -153,7 +126,7 @@ class TracePlot:
                 df = df.apply(pd.to_numeric, errors='coerce')
                 data_header_index = df[0].apply(pd.to_numeric, errors='coerce').first_valid_index()
                 data = df.iloc[data_header_index:, :2]
-                data.iloc[:, 0] /= 1e9  # Convert frequency to GHz
+                data.iloc[:, 0] /= 1e9  # Convert freq to GHz
                 trace_data.append(data)
 
                 # Calculate current data density
@@ -176,7 +149,7 @@ class TracePlot:
     def plot(self, mask: dict = None, figsize=(18, 6)) -> None:
         """Plot the trace data with optional mask."""
         plt.figure(figsize=figsize)
-        plt.plot(self.sampled_trace_data['frequency'], self.sampled_trace_data['power_dbm'], label='Trace Data')
+        plt.plot(self.sampled_trace_data['freq'], self.sampled_trace_data['pow_dBm'], label='Trace Data')
 
         if mask:
             new_mask = self._build_mask(mask)
@@ -190,7 +163,7 @@ class TracePlot:
         plt.show()
 
     def _build_mask(self, mask: dict) -> dict:
-        """Build the frequency mask for plotting."""
+        """Build the freq mask for plotting."""
         new_mask = {'freq': [], 'ave_limit': [], 'peak_limit': []}
         for freq_range, limit in mask.items():
             for idx in [0, 1]:

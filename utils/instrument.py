@@ -24,7 +24,7 @@ import time
 
 class SpectrumAnalyzer(object):
     def __init__(self, scpi_cmds: dict, ip_addr: str) -> None:
-        self._config_scpi_cmds = scpi_cmds
+        self._scpi_cmds = scpi_cmds
         self._retry_wait_sec = 0.5
 
         self._connect_to_instr(ip_addr)
@@ -44,8 +44,8 @@ class SpectrumAnalyzer(object):
             delimiter = ':'
 
         try:
-            config_scpi_cmd = f"{self._config_scpi_cmds[param]}{delimiter}{value}"
-            self._instr.write(config_scpi_cmd)
+            cfg_cmd = f"{self._scpi_cmds[param]}{delimiter}{value}"
+            self._instr.write(cfg_cmd)
         except KeyError:
             print(f"Parameter '{param}' not found in SCPI commands dict.")
         except Exception as e:
@@ -123,16 +123,6 @@ class SpectrumAnalyzer(object):
         y = float(self._instr.query(f"CALC:MARK1:Y?"))  # power value
         return x, y
 
-    def place_marker_at_peak(self):
-        self._instr.write("CALC:MARK1:MAX")
-
-    def read_marker_value(self, axis):
-        return self._instr.query(f"CALC:MARK1:{axis}?")
-    
-    def close(self):
-        self._instr.close()
-        self._rm.close()
-    
 # END OF CLASS DEFINITION
 #---------------------------------------------------------------------------------
 

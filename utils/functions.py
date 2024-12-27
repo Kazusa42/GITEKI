@@ -70,9 +70,7 @@ def show_measurement_result(result_dict: dict, headers=None):
     col_widths = [max(width, len(headers[i])) for i, width in enumerate(col_widths)]
     separator = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
 
-    print(separator)
-    print(format_row(*headers))
-    print(separator)
+    print(f"{separator}\n{format_row(*headers)}\n{separator}")
     for key, value in result_dict.items():
         row = [key] + (value if isinstance(value, list) else [value, "-----"])
         print(format_row(*row[:len(headers)]))
@@ -89,11 +87,7 @@ def show_configure(config_dict: dict):
     def format_row(items):
         return "| " + " | ".join(f"{str(item):<{col_widths[i]}}" for i, item in enumerate(items)) + " |"
 
-    print(separator)
-    print(format_row(keys))
-    print(separator)
-    print(format_row(values))
-    print(separator)
+    print(f"{separator}\n{format_row(keys)}\n{separator}\n{format_row(values)}\n{separator}")
 
 def write_report(report_file, text, data_dict):
     try:
