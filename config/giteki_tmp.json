@@ -1,4 +1,13 @@
 {
+    "obw_and_sbw": {
+        "detector": "POS",
+        "trace_mode": "MAXH",
+        "RBW": "1MHz",
+        "VBW": "1MHz",
+        "sweep_time": "150ms",
+        "sweep_points": "1001",
+        "continues_sweep": "ON"
+    },
     "search": {
         "common": {
             "RBW": "1MHz",
@@ -48,102 +57,103 @@
         }
     },
     "masks": {
+        "sbw": "0.45",
         "49_27_3": {
-            "occupied_freq_band": "7.587GHz~8.4GHz",
-            "0.03GHz~1.6GHz": {
-                "peak": "-84dBm/50MHz",
-                "average": "-90dBm/1MHz"
+            "obw": "7.587~8.4",
+            "0.03~1.6": {
+                "peak": "-84",
+                "ave": "-90"
             },
-            "1.6GHz~2.7GHz": {
-                "peak": "-79dBm/50MHz",
-                "average": "-85dBm/1MHz"
+            "1.6~2.7": {
+                "peak": "-79",
+                "ave": "-85"
             },
-            "2.7GHz~7.25GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "2.7~7.25": {
+                "peak": "-64",
+                "ave": "-70"
             },
-            "7.25GHz~7.587GHz": {
-                "peak": "-35dBm/50MHz",
-                "average": "-59.3dBm/1MHz"
+            "7.25~7.587": {
+                "peak": "-35",
+                "ave": "-59.3"
             },
-            "7.587GHz~8.4GHz": {
-                "peak": "0dBm/50MHz",
-                "average1": "-51.3dBm/1MHz",
-                "average2": "-41.3dBm/1MHz",
-                "dividing_freq": "7.662GHz",
-                "allowable_dev": "20%"
+            "7.587~8.4": {
+                "peak": "0",
+                "ave1": "-51.3",
+                "ave2": "-41.3",
+                "dividing_freq": "7.662",
+                "allowable_dev": "0.2"
             },
-            "8.4GHz~8.5GHz": {
-                "peak": "-35dBm/50MHz",
-                "average": "-59.3dBm/1MHz"
+            "8.4~8.5": {
+                "peak": "-35",
+                "ave": "-59.3"
             },
-            "8.5GHz~10.25GHz": {
-                "peak": "-35.7dBm/50MHz",
-                "average": "-60dBm/1MHz"
+            "8.5~10.25": {
+                "peak": "-35.7",
+                "ave": "-60"
             },
-            "10.25GHz~10.6GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "10.25~10.6": {
+                "peak": "-64",
+                "ave": "-70"
             },
-            "10.6GHz~10.7GHz": {
-                "peak": "-79dBm/50MHz",
-                "average": "-85dBm/1MHz"
+            "10.6~10.7": {
+                "peak": "-79",
+                "ave": "-85"
             },
-            "10.7GHz~11.7GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "10.7~11.7": {
+                "peak": "-64",
+                "ave": "-70"
             },
-            "11.7GHz~12.75GHz": {
-                "peak": "-79dBm/50MHz",
-                "average": "-85dBm/1MHz"
+            "11.7~12.75": {
+                "peak": "-79",
+                "ave": "-85"
             },
-            "12.75GHz~26GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "12.75~26": {
+                "peak": "-64",
+                "ave": "-70"
             }
         },
         "49_27_4": {
-            "occupied_freq_band": "7.25GHz~9.0GHz",
-            "0.03GHz~1.6GHz": {
-                "peak": "-84dBm/50MHz",
-                "average": "-90dBm/1MHz"
+            "obw": "7.25~9.0",
+            "0.03~1.6": {
+                "peak": "-84",
+                "ave": "-90"
             },
-            "1.6GHz~2.7GHz": {
-                "peak": "-79dBm/50MHz",
-                "average": "-85dBm/1MHz"
+            "1.6~2.7": {
+                "peak": "-79",
+                "ave": "-85"
             },
             "2.7GHz~7.25GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+                "peak": "-64",
+                "ave": "-70"
             },
-            "7.25GHz~9.0GHz": {
-                "peak": "0dBm/50MHz",
-                "average": "-41.3dBm/1MHz",
-                "allowable_dev": "20%"
+            "7.25~9.0": {
+                "peak": "0",
+                "ave": "-41.3",
+                "allowable_dev": "0.2"
             },
-            "9.0GHz~10.25GHz": {
-                "peak": "-35.7dBm/50MHz",
-                "average": "-60dBm/1MHz"
+            "9.0~10.25": {
+                "peak": "-35.7",
+                "ave": "-60"
             },
-            "10.25GHz~10.6GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "10.25~10.6": {
+                "peak": "-64",
+                "ave": "-70"
             },
-            "10.6GHz~10.7GHz": {
-                "peak": "-79dBm/50MHz",
-                "average": "-85dBm/1MHz"
+            "10.6~10.7": {
+                "peak": "-79",
+                "ave": "-85"
             },
-            "10.7GHz~11.7GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "10.7~11.7": {
+                "peak": "-64",
+                "ave": "-70"
             },
-            "11.7GHz~12.75GHz": {
-                "peak": "-79dBm/50MHz",
-                "average": "-85dBm/1MHz"
+            "11.7~12.75": {
+                "peak": "-79",
+                "ave": "-85"
             },
-            "12.75GHz~26GHz": {
-                "peak": "-64dBm/50MHz",
-                "average": "-70dBm/1MHz"
+            "12.75~26": {
+                "peak": "-64",
+                "ave": "-70"
             }
         }
     }
