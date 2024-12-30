@@ -43,16 +43,14 @@
         },
         "diff": {
             "ave": {
-                "exception": {
-                    "span": "100MHz",
-                    "RBW": "1MHz",
-                    "VBW": "3MHz",
-                    "detector": "RMS",
-                    "trace_mode": "MAXH",
-                    "sweep_time": "1000ms",
-                    "sweep_points": "1001",
-                    "continues_sweep": "ON"
-                }
+                "span": "100MHz",
+                "RBW": "1MHz",
+                "VBW": "3MHz",
+                "detector": "RMS",
+                "trace_mode": "MAXH",
+                "sweep_time": "1000ms",
+                "sweep_points": "1001",
+                "continues_sweep": "ON"
             }
         }
     },
@@ -128,7 +126,9 @@
             },
             "7.25~9.0": {
                 "peak": "0",
-                "ave": "-41.3",
+                "ave1": "-41.3",
+                "ave2": "-41.3",
+                "dividing_freq": "9.0",
                 "allowable_dev": "0.2"
             },
             "9.0~10.25": {
