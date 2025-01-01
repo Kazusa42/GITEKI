@@ -15,10 +15,12 @@
 
 import os
 import sys
-import time
 import math
+import time
 import platform
 import openpyxl
+
+from pathlib import Path
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
@@ -26,6 +28,18 @@ import utils.components as comps
 import utils.instrument as instr
 
 # END OF PACKAGE IMPORT
+#---------------------------------------------------------------------------------
+
+#---------------------------------------------------------------------------------
+# DEFINE GLOBAL VARIABLES HERE
+
+t_cal = comps.TraceDataCalculator()
+
+comps.Const.MAIN_DIR = Path(__file__).resolve().parent.parent
+comps.Const.SSHOT_DIR = os.path.join(comps.Const.MAIN_DIR, 'screenshots')
+comps.Const.TRACE_DIR = os.path.join(comps.Const.MAIN_DIR, 'trace_data')
+
+# END OF GLOBAL VARIABLES DEFINITION
 #---------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------
@@ -58,15 +72,12 @@ def show_measurement_result(result_dict: dict, headers=None):
     
     if headers is None:
         headers = ["Item", "Value", "Passed/Failed"]
-    
     col_widths = [max(len(str(key)) for key in result_dict.keys())]
     for i in range(1, len(headers)):
-        col_widths.append(
-            max(
-                len(str(value[i - 1])) if isinstance(value, list) else len(str(value))
-                for value in result_dict.values()
-            )
-        )
+        col_widths.append(max(
+            len(str(value[i - 1])) if isinstance(value, list) else len(str(value))
+            for value in result_dict.values()
+        ))
     col_widths = [max(width, len(headers[i])) for i, width in enumerate(col_widths)]
     separator = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
 
@@ -77,16 +88,14 @@ def show_measurement_result(result_dict: dict, headers=None):
     print(separator)
 
 def show_configure(config_dict: dict):
-    keys = list(config_dict.keys())
-    values = list(config_dict.values())
-
-    col_widths = [max(len(str(key)), len(str(value))) for key, value in config_dict.items()]
-
-    separator = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
-
     def format_row(items):
         return "| " + " | ".join(f"{str(item):<{col_widths[i]}}" for i, item in enumerate(items)) + " |"
+    
+    keys, values = list(config_dict.keys()), list(config_dict.values())
+    col_widths = [max(len(str(key)), len(str(value))) for key, value in config_dict.items()]
+    separator = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
 
+    print(f"- Measureing Condition: ")
     print(f"{separator}\n{format_row(keys)}\n{separator}\n{format_row(values)}\n{separator}")
 
 def write_report(report_file, text, data_dict):
@@ -130,388 +139,220 @@ def choose_condition(condition_type) -> str:
     else:
         return None
 
-def measure_obw_and_sbw(spectrum_analyzer: instr.SpectrumAnalyzer, standard: dict,
-                        working_dir: str, rule=r'49_27_3', method=r'general') -> dict:
-    """
-    Measure the OBW and SBW of a device
+def unit_measurement(sa: instr.SpectrumAnalyzer, sa_config: dict):
+    show_configure(sa_config)  # display spectrum analyzer
 
-    Params:
-        spectrum_analyzer: an instance of class SpectrumAnalyzer
-        standard: GITEKI standard about OBW and SBW
-        working_dir: where the main script is executed, bt used to store data
-        rule: 49_27_3 or 49_27_4
-    
-    Return: 
-        measurement result in a dict
-    """
-
-    # stop sweep, wait for board launch up
-    spectrum_analyzer.config(param='continues_sweep', value='OFF')
+    sa.config(param='continues_sweep', value='OFF')  # stop sweep
     input('Waiting for board launch up. Press enter to start measurement.')
 
-    # config sepctrum analyzer and start continuous sweep
-    print(f"Starting the OBW and SBW measurement.")
-    spectrum_analyzer.config(standard[rule]['measure'][method]['configure'])
+    sa.config(param=sa_config)  # start continues sweep
+    input(f"Waiting trace to stabilize. Press Enter to stop sweep.")
+    sa.config(param='continues_sweep', value='OFF')  # stop sweep
 
-    # set OBW measurement parameters
-    spectrum_analyzer.config(param='obw_percent', value='99PCT')
-    spectrum_analyzer.config(param='obw_measure', value='SEL OBW', delimiter=':')
-    spectrum_analyzer.config(param='obw_measure', value='RES? OBW', delimiter=':')
+    peak_freq, peak_power = sa.aquire_peak_point()
+    return peak_freq, peak_power
 
-    # wait for the trace becomes stable
-    input('Waiting trace becomes stable. Press enter to stop sweep.')
-
-    # stop sweeping to capture stable data
-    spectrum_analyzer.config(param='continues_sweep', value='OFF')
-
-    # save screenshot
-    screenshots_save_dir = os.path.join(working_dir, r'screenshots')
-    screenshot = os.path.join(screenshots_save_dir, f'obw_and_sbw_{rule}.png')
-    spectrum_analyzer.save_screenshot(screenshot)
-
-    # save trace data
-    trace_data_save_dir = os.path.join(working_dir, r'trace_data')
-    trace_data_file = os.path.join(trace_data_save_dir, f'obw_and_sbw_{rule}.csv')
-    spectrum_analyzer.save_trace_to_csv(trace_data_file)
-
-    # close temporary markers for obw measurement
-    spectrum_analyzer.config(param='obw_measure', value='OFF')
-
-    # calculate SBW and OBW and union them in one dict
-    calculator = comps.TraceDataCalculator(trace_data_file)
-    obw_result = calculator.calculate_obw(standard[rule]['standard'])
-    sbw_result = calculator.calculate_sbw(standard[rule]['standard'])
-    obw_and_sbw_result = obw_result | sbw_result
+def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3'):
+    # calculate center freq. and span
+    start_freq = float(giteki_dict['masks'][rule]['obw'].split('~')[0])  #GHz
+    stop_freq = float(giteki_dict['masks'][rule]['obw'].split('~')[1])   #GHz
+    sbw_limit = float(giteki_dict['masks']['sbw']) * 1e3  # MHz
+    obw_limit = (stop_freq - start_freq) * 1e3  # MHz
+    center_freq = (start_freq + stop_freq) / 2  # GHz
     
-    return obw_and_sbw_result
+    # place tmp marker for obw measurement
+    sa.config(param='obw_percent', value='99PCT')
+    sa.config(param='obw_measure', value='SEL OBW', delimiter=':')
+    sa.config(param='obw_measure', value='RES? OBW', delimiter=':')
 
-def measure_peak_power(spectrum_analyzer: instr.SpectrumAnalyzer, standard: dict,
-                       working_dir: str, rule=r'49_27_3', method=r'general'):
-    """
-    Measure the peak power of a device
+    # construct other cfg of spectrum analyzer
+    sa_cfg = {'center_freq': f"{center_freq}GHz", 'span': f"{obw_limit * 3}MHz"}
+    sa_cfg.update(giteki_dict['obw_and_sbw'])
 
-    Params:
-        spectrum_analyzer: an instance of class SpectrumAnalyzer
-        standard: GITEKI standard about peak power
-        rule: 49-27-3 or 49-27-4
-        method: test method. peak has 2 test methods.
-                1. general test methods (general); 2. widen RBW to 50MHz (exception)
-    """
+    unit_measurement(sa, sa_cfg)  # perform measurement
+    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'obw_and_sbw.png'))  # save screenshot
+    sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'obw_and_sbw.csv'))  # save trace data
 
-    # a unit measurement step, do some measure and capture the peak point value
-    def capture_peak_data(step: str) -> tuple:
-        print(f"Starting {step} step of peak power measurement.")
-
-        # Configure spectrum analyzer
-        if step == "search":
-            spectrum_analyzer.config(standard[rule]['search']['configure'])
-        elif step == "measure":
-            spectrum_analyzer.config(param='center_freq', value=freq_at_search)
-            spectrum_analyzer.config(standard[rule]['measure'][method]['configure'])
-        # wait trace to stabilize and stop sweeping
-        input(f"Waiting trace to stabilize for {step} step. Press Enter to stop sweep.")
-        spectrum_analyzer.config(param='continues_sweep', value='OFF')
-
-        # aquire peak point information
-        peak_freq, peak_power = spectrum_analyzer.aquire_peak_point()
-
-        # save screenshot for current step
-        screenshot = os.path.join(screenshots_save_dir, f'peak_power_{step}_{rule}_{method}.png')
-        spectrum_analyzer.save_screenshot(screenshot)
-
-        return peak_power, peak_freq
-    
-    # init screenshot directory
-    screenshots_save_dir = os.path.join(working_dir, 'screenshots')
-
-    # stop sweep, wait for board launch up
-    spectrum_analyzer.config(param='continues_sweep', value='OFF')
-    spectrum_analyzer.config(param='yaxis_ref_level', value='0dBm')
-    input('Waiting for board launch up. Press enter to start measurement.')
-
-    # search step
-    peak_search, freq_at_search = capture_peak_data(step='search')
-
-    # measure step
-    peak_measure, freq_at_measure = capture_peak_data(step='measure')
-
-    # pass / fail determin
-
-    # calculate correction factor and plus it to reading value
-    rbw = 3 if method == 'general' else 50
-    correction_factor = 20 * math.log10(float(50.0) / rbw)
-    peak = correction_factor + peak_measure
-
-    # load limitation
-    limit = float(standard[rule]['standard']['limitation'].split('dBm')[0])
-    allowable_dev = float(standard[rule]['standard']['allowable_dev'].split('%')[0]) / 100
-
-    max_limit_mW = (10 ** (limit / 10)) * (1 + allowable_dev)
-    max_limit_dBm = 10 * math.log10(max_limit_mW)
-
-    peak_status = f"Passed" if peak <= max_limit_dBm else f"Failed"
+    # use trace data to calculate obw and sbw
+    global t_cal
+    t_cal.read_trace_data('obw_and_sbw.csv')
+    obw, l_freq, r_freq = t_cal.calculate_obw()  # calculate obw
+    obw_status = "Passed" if obw <= obw_limit else "Failed"
+    l_freq_status = "Passed" if l_freq >= start_freq else "Failed"
+    r_freq_status = "Passed" if r_freq <= stop_freq else "Failed"
+    sbw = t_cal.calculate_sbw()  # calculate abw
+    sbw_status = "Passed" if sbw >= sbw_limit else "Failed"
 
     return {
-        "peak@search (reading)": f"{round(peak_search, 2)}dBm",
-        "freq@search": f"{round(freq_at_search / 1e9, 5)}GHz",
-        "peak@measure (reading)": f"{round(peak_measure, 2)}dBm",
-        "correction factor": f"{round(correction_factor, 2)}",
-        "peak (reading + correction factor)": [f"{round(peak, 2)}dBm", peak_status],
-        "freq@measure": f"{round(freq_at_measure / 1e9, 5) }GHz",
+        'obw': [f"{obw}MHz", obw_status],
+        'obw lower freq': [f"{l_freq}GHz", l_freq_status],
+        'obw upper freq': [f"{r_freq}GHz", r_freq_status],
+        'sbw': [f"{sbw}MHz", sbw_status]
     }
 
-def measure_ave_power(spectrum_analyzer: instr.SpectrumAnalyzer, standard: dict,
-                      working_dir: str, rule=r'49_27_3', method=r'general'):
-    """
-    Measure the average power of a device
+def measure_peak_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3', method='general'):
+    start_freq = f"{giteki_dict['masks'][rule]['obw'].split('~')[0]}GHz"
+    stop_freq = f"{giteki_dict['masks'][rule]['obw'].split('~')[1]}GHz"
 
-    Params:
-        spectrum_analyzer: an instance of class SpectrumAnalyzer
-        standard: GITEKI standard about average power
-        rule: 49-27-3 or 49-27-4
-        method: test method. average has 2 test methods.
-                1. general test methods (general); 2. use RMS detector (exception)
-    """
+    # construct spectrum analyzer config
+    sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
+    sa_cfg.update(giteki_dict['search']['common'])
+    sa_cfg.update(giteki_dict['search']['diff']['peak']['general'])  # set RBW to 3MHz, VBW to 10MHz
 
-    # a unit measurement step, do some measure and capture the peak point value
-    def capture_peak_data(step: str, span: str = None) -> tuple:
-        print(f"Starting {step} step of average power measurement" + (f" with span {span}" if span else "") + ".")
+    search_freq, _ = unit_measurement(sa, sa_cfg)  # search
+    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'peak_search.png'))
 
-        # Configure analyzer and place marker at peak
-        spectrum_analyzer.config(standard[rule][step]['configure'])
-
-        # wait trace to stabilize and stop sweeping
-        input(f"Waiting trace to stabilize for {step} step. Press Enter to stop sweep.")
-        spectrum_analyzer.config(param='continues_sweep', value='OFF')
-
-        # aquire peak point information
-        peak_freq, peak_power = spectrum_analyzer.aquire_peak_point()
-
-        # save screenshot for current step
-        screenshot_name = f"ave_power_{step}" + (f"_span={span}" if span else "") + f"_{rule}_{method}.png"
-        spectrum_analyzer.save_screenshot(os.path.join(screenshots_save_dir, screenshot_name))
-
-        return peak_power, peak_freq
+    # zoom in with span 100MHz
+    del sa_cfg['start_freq']
+    del sa_cfg['stop_freq']
+    sa_cfg.update({'center_freq': search_freq, 'span': '100MHz'})
+    if method != 'general':  # wide RBW to 50MHz if necessary
+        sa_cfg.update(giteki_dict['search']['diff']['peak']['exception'])
     
-    def get_occupied_freq_range(standard: dict, rule: str) -> str:
-        try:
-            center_freq_str = standard[rule]['search']['configure']['center_freq']
-            center_freq = float(center_freq_str.rstrip('GHz'))
+    search_freq, search_peak = unit_measurement(sa, sa_cfg)
+    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'peak_zoom_in_{method}.png'))
 
-            span_str = standard[rule]['search']['configure']['span'].split('Hz')[0]
-            span_value, span_unit = float(span_str[:-1]), span_str[-1]
-            span_ghz = span_value if span_unit == 'G' else span_value / 1e3  # 转换为 GHz
+    # calculate correction factor
+    rbw = float(sa_cfg['RBW'].split('MHz'))
+    corr_factor = 20 * math.log10(float(50.0) / rbw)
+    peak = corr_factor + search_peak
 
-            start_freq = center_freq - span_ghz / 2
-            stop_freq = center_freq + span_ghz / 2
+    # load limit
+    obw_key = giteki_dict['masks'][rule]['obw']
+    limit = giteki_dict['masks'][rule][obw_key]['peak']
+    dev = giteki_dict['masks'][rule][obw_key]['allowable_dev']
+    limit = 10 * math.log10((10 ** (limit / 10)) * (1 + dev))
 
-            return f"{start_freq}GHz~{stop_freq}GHz"
+    status = 'Passed' if peak <= limit else 'Failed'
 
-        except KeyError as e:
-            return f"Missing key in configuration: {e}"
-        except ValueError:
-            return "Invalid frequency format in the standard."
+    return {
+        'reading value': f"{round(search_peak, 2)}dBm",
+        'freq.': f"{round(search_freq / 1e9, 5)}GHz",
+        'corr. factor': f"{round(corr_factor, 2)}",
+        'peak (reading val. + corr. factor)': [f"{round(peak, 2)}dBm", status]
+    }
 
-    # some init
-    screenshots_save_dir = os.path.join(working_dir, 'screenshots')
-    trace_data_save_dir = os.path.join(working_dir, 'trace_data')
+def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3', method='general'):
+    freq_interval = giteki_dict['masks'][rule]['obw']
+    start_freq = f"{freq_interval.split('~')[0]}GHz"
+    stop_freq = f"{freq_interval.split('~')[1]}GHz"
 
-    # stop sweep and wait for board launch up
-    spectrum_analyzer.config(param='continues_sweep', value='OFF')
-    spectrum_analyzer.config(param='yaxis_ref_level', value='0dBm')
-    input('Waiting for board launch up. Press enter to start measurement.')
+    # construct spectrum analyzer config
+    sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
+    sa_cfg.update(giteki_dict['search']['common'])
 
-    # search step
-    peak_search, freq_at_search = capture_peak_data('search')
+    search_freq, _ = unit_measurement(sa, sa_cfg)  # search
+    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'ave_search.png'))
+    sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{freq_interval}.csv'))  # to draw plot
 
-    # save trace data in order to draw all signal wave and mask
-    print("Saving trace data in order to draw all signal wave and mask")
-    occupied_freq_range = get_occupied_freq_range(standard, rule)
-    trace_data_name = f'trace_data_interval00({occupied_freq_range}).csv'
-    trace_data_file = os.path.join(trace_data_save_dir, trace_data_name)
-    spectrum_analyzer.save_trace_to_csv(trace_data_file)
-
-    # zoom in step with spans
+    # zoom in with span 100MHz and 10MHz
+    del sa_cfg['start_freq']
+    del sa_cfg['stop_freq']
     for span in ['100MHz', '10MHz']:
-        # set span and center freq
-        spectrum_analyzer.config({'center_freq': freq_at_search, 'span': span})
-        # start zoom in measurement
-        peak_search, freq_at_search = capture_peak_data("zoom_in", span)
-        
+        sa_cfg.update({'center_freq': search_freq, 'span': span})
+        search_freq, _ = unit_measurement(sa, sa_cfg)
+        sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'ave_zoom_in_span={span}.png'))
+
     # measure step
-    # config sepctrum analyzer for measure step
-    spectrum_analyzer.config(param='center_freq', value=freq_at_search)
-    spectrum_analyzer.config(standard[rule]['measure'][method]['configure'])
-
-    # retrieve power for each method and save trace data if needed
+    sa_cfg.update({'center_freq': search_freq})
     if method == 'general':
-        # save trace data to csv file
-        trace_data_file = os.path.join(trace_data_save_dir, f'ave_power_measure_{rule}.csv')
-        spectrum_analyzer.save_trace_to_csv(trace_data_file)
+        sa_cfg.update(giteki_dict['measure']['common'])
+        measure_freq, _ = unit_measurement(sa, sa_cfg)
+        sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
 
-        # calculate average power from trace data
-        calculater = comps.TraceDataCalculator(trace_data_file)
-        peak_measure = calculater.calculate_ave_power()
-        freq_at_measure = freq_at_search
+        # use trace data to calculate average power
+        global t_cal
+        t_cal.read_trace_data(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
+        ave = t_cal.calculate_ave_power()
 
-    elif method == 'exception':  # measure average power with RMS detector
-        # wait trace to stabilize and stop sweeping
-        input('Waiting trace becomes stable. Press enter to stop sweep.')
-        spectrum_analyzer.config(param='continues_sweep', value='OFF')
-        freq_at_measure, peak_measure = spectrum_analyzer.aquire_peak_point()
+    else:
+        sa_cfg.update(giteki_dict['measure']['diff']['ave'])
+        measure_freq, ave = unit_measurement(sa, sa_cfg)
 
-    # save screenshot for measure step
-    screenshot_name = f"ave_power_measure_{rule}_{method}.png"
-    screenshot = os.path.join(screenshots_save_dir, screenshot_name)
-    spectrum_analyzer.save_screenshot(screenshot)
-
-    # pass / fail determin
-    if rule == '49_27_3':
-        dividing_freq_hz = float(standard[rule]['standard']['dividing_freq'].split('GHz')[0]) * 1e9
-        limit_key_suffix = '1' if freq_at_measure <= dividing_freq_hz else '2'
-    else:  # rule is 49_27_4
-        limit_key_suffix = ''
-
-    limit_key = f"limitation{limit_key_suffix}"
+    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'ave_measure_{method}.png'))
     
-    limit = float(standard[rule]['standard'][limit_key].split('dBm')[0])
-    allowable_dev = float(standard[rule]['standard']['allowable_dev'].split('%')[0]) / 100
+    # load limit
+    obw_key = giteki_dict['masks'][rule]['obw']
+    d_freq = giteki_dict['masks'][rule][obw_key]['dividing_freq']
+    idx = '1' if measure_freq <= d_freq else '2'
+    limit = giteki_dict['masks'][rule][obw_key][f'ave{idx}']
+    dev = giteki_dict['masks'][rule][obw_key]['allowable_dev']
+    limit = 10 * math.log10((10 ** (limit / 10)) * (1 + dev))
 
-    max_limit_mW = (10 ** (limit / 10)) * (1 + allowable_dev)
-    max_limit_dBm = 10 * math.log10(max_limit_mW)
-
-    ave_status = f"Passed" if peak_measure <= max_limit_dBm else f"Failed"
+    status = 'Passed' if ave <= limit else 'Failed'
 
     return {
-        "average@search": f"{round(peak_search, 2)}dBm",
-        "freq@search": f"{round(freq_at_search / 1e9, 5)}GHz",
-        "average@measure": [f"{round(peak_measure, 2)}dBm", ave_status],
-        "freq@measure": f"{round(freq_at_measure / 1e9, 5)}GHz",
+        'ave power': [f"{round(ave, 2)}dBm", status],
+        'freq': f"{round(measure_freq / 1e9, 5)}GHz"
     }
 
-def measure_spurious(spectrum_analyzer: instr.SpectrumAnalyzer, standard: dict,
-                     working_dir: str, rule='49_27_3') -> dict:
-    """
-    Measure the peak and average power of spurious (unwanted) emission
-
-    Params:
-        spectrum_analyzer: an instance of class SpectrumAnalyzer
-        standard: GITEKI standard about average power of spurious emission
-        rule: 49-27-3 or 49-27-4
-    """
-    # a unit measurement step, do some measure and capture the peak point value
-    def capture_peak_data(freq_range: str, config: dict, step: str) -> tuple:
-        
-        spectrum_analyzer.config(config)
-        input('Waiting trace becomes stable. Press enter to stop sweep.')
-        spectrum_analyzer.config(param='continues_sweep', value='OFF')
-
-        spectrum_analyzer.place_marker_at_peak()
-        freq_at_search = float(spectrum_analyzer.read_marker_value(axis='X'))
-        peak_search = float(spectrum_analyzer.read_marker_value(axis='Y'))
-
-        screenshot_name = f"spurious_{step}_{freq_range}.png"
-        screenshot = os.path.join(screenshots_save_dir, screenshot_name)
-        spectrum_analyzer.save_screenshot(screenshot)
-        return freq_at_search, peak_search
+def measure_spurious(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3'):
+    result = {}
+    freq_intervals = giteki_dict['masks'][rule].copy()
     
-    spurious_results = {}
+    del freq_intervals[giteki_dict['masks'][rule]['obw']]
+    del freq_intervals['obw']
 
-    # Stop sweep and prepare for measurement
-    spectrum_analyzer.config(param='continues_sweep', value='OFF')
-    input('Waiting for board launch up. Press enter to start measurement.')
-
-    standard_limitation = standard[rule]['standard']
-    freq_intervals = standard[rule]['intervals']
-
-    screenshots_save_dir = os.path.join(working_dir, r'screenshots')
-    trace_data_save_dir = os.path.join(working_dir, r'trace_data')
-
-    # Measure across frequency intervals
-    for index, (freq_range, interval_val) in enumerate(freq_intervals.items()):
-        print(f"Measuring spurious @ frequency range: {freq_range}")
-        spectrum_analyzer.config(interval_val)
+    # iterate all spurious freq. band
+    for f_interval in freq_intervals:
+        start_freq = f"{f_interval.split('~')[0]}GHz"
+        stop_freq = f"{f_interval.split('~')[1]}GHz"
 
         # search step
-        freq_at_search, peak_search = capture_peak_data(
-            freq_range, standard[rule]['search']['configure'], 'search'
-        )
+        sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
+        sa_cfg.update(giteki_dict['search']['common'])
 
-        # save trace data in order to draw all signal wave and mask
-        print("Saving trace data in order to draw all signal wave and mask.")
-        trace_data_name = f'trace_data_interval{(index + 1):02}({freq_range}).csv'
-        trace_data_file = os.path.join(trace_data_save_dir, trace_data_name)
-        spectrum_analyzer.save_trace_to_csv(trace_data_file)
+        search_freq, search_peak = unit_measurement(sa, sa_cfg)
+        sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'spu_search_{f_interval}.png'))
+        sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{f_interval}.csv'))  # to draw plot
 
-        # Check peak and average limitations
-        peak_limit = float(standard_limitation[freq_range]['peak'].split('dBm')[0])
-        ave_limit = float(standard_limitation[freq_range]['average'].split('dBm')[0])
-        print(f"peak@search: {round(peak_search, 2)}dBm;", end=' ')
-        print(f"peak limit: {peak_limit}dBm; average limit: {ave_limit}dBm")
+        ave_limit = giteki_dict['masks'][rule][f_interval]['ave']
+        peak_limit = giteki_dict['masks'][rule][f_interval]['peak']
 
-        # Initialize spurious result placeholders
-        spurious_peak = spurious_ave = None
-        spurious_peak_freq = spurious_ave_freq = None
-        spurious_ave_cal = None
+        peak = ave = cal_ave = peak_freq = ave_freq = None
+        if search_peak <= ave_limit:
+            ave, ave_freq = search_peak, search_freq
 
-        if ave_limit >= peak_search:
-            spurious_ave = peak_search
-            spurious_ave_freq = freq_at_search
+        if search_peak <= peak_limit - 3:
+            peak, peak_freq = search_peak, search_freq
 
-        if peak_limit - peak_search > 3:
-            spurious_peak = peak_search
-            spurious_peak_freq = freq_at_search
+        if peak is None or ave is None:  # zoom in step if necessary
+            del sa_cfg['start_freq']
+            del sa_cfg['stop_freq']
 
-        # zoom-in if peak@search does not meet limitations
-        if ave_limit < peak_search or peak_limit - peak_search < 3:
-            for span in ['100MHz', '10MHz']:
-                print(f"Starting zoom in step with span {span}.")
-                spectrum_analyzer.config({'center_freq': freq_at_search, 'span': span})
-                freq_at_search, peak_search = capture_peak_data(
-                    freq_range, standard[rule]['zoom_in']['configure'], f'zoom_in_span={span}'
-                )
+            for span in ['100MHz', '10MHz']:  # zoom in step
+                sa_cfg.update({'center_freq': search_freq, 'span': span})
+                search_freq, search_peak = unit_measurement(sa, sa_cfg)
+                sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'spu_zoom_in_span={span}_{f_interval}.png'))
 
-            # Update peak if necessary
-            spurious_peak = spurious_peak or peak_search
-            spurious_peak_freq = spurious_peak_freq or freq_at_search
-            spurious_ave_freq = spurious_ave_freq or freq_at_search
+            if peak is None:  # update peak result if necessary
+                peak, peak_freq = search_peak, search_freq
+            
+            if ave is None:  # measure step if necessary
+                sa_cfg.update({'center_freq': search_freq})
+                sa_cfg.update(giteki_dict['measure']['common'])
+                ave_freq, ave = unit_measurement(sa, sa_cfg)
 
-            # Zero span measurement for average if necessary
-            if spurious_ave is None:
-                spectrum_analyzer.config(standard[rule]['measure']['general']['configure'])
-                spectrum_analyzer.place_marker_at_peak()
-                spurious_ave = float(spectrum_analyzer.read_marker_value(axis='Y'))
-                screenshot = os.path.join(screenshots_save_dir, f'spurious_measure_{rule}_{freq_range}_0span.png')
-                spectrum_analyzer.save_screenshot(screenshot)
+                # save trace data to get calculate average
+                sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'spu_ave_measure_{f_interval}.csv'))
+                global t_cal
+                t_cal.read_trace_data(os.path.join(comps.Const.TRACE_DIR, f'spu_ave_measure_{f_interval}.csv'))
+                cal_ave = t_cal.calculate_ave_spurious()
 
-                # save trace data in order to calculate average spurious
-                trace_data_name = f'ave_spurious_measure_{rule}_{freq_range}.csv'
-                trace_data_file = os.path.join(trace_data_save_dir, trace_data_name)
-                spectrum_analyzer.save_trace_to_csv(trace_data_file)
-
-                calculator = comps.TraceDataCalculator(trace_data_file)
-                spurious_ave_cal = calculator.calculate_ave_spurious()
-        
-        # pass / faile determin
-        ave_limit = float(standard[rule]['standard'][freq_range]['average'].split('dBm')[0])
-        peak_limit = float(standard[rule]['standard'][freq_range]['peak'].split('dBm')[0])
-
-        peak_status = f"Passed" if spurious_peak <= peak_limit else f"Failed"
-        reading_ave_status = f"Passed" if spurious_ave <= ave_limit else f"Failed"
-        if spurious_ave_cal is not None:
-            cal_ave_status = f"Passed" if spurious_ave_cal <= ave_limit else f"Failed"
-            res_spurious_ave_cal = f"{round(spurious_ave_cal, 2)}dBm"
+        # pass / fail determination
+        peak_status = 'Passed' if peak <= peak_limit else 'Failed'
+        m_ave_status = 'Passed' if ave <= ave_limit else 'Failed'
+        if cal_ave:
+            c_ave_status = 'Passed' if cal_ave <= ave_limit else 'Failed'
         else:
-            cal_ave_status = f"Not calculated"
-            res_spurious_ave_cal = f"None"
+            c_ave_status = 'None'
 
-        # Store results in dictionary
-        spurious_results[freq_range] = {
-            "spurious peak": [f"{round(spurious_peak, 2)}dBm", peak_status],
-            "freq@peak": f"{round(spurious_peak_freq / 1e9, 5)}GHz",
-            "spurious average (reading)": [f"{round(spurious_ave, 2)}dBm", reading_ave_status],
-            "spurious average (calculate)": [res_spurious_ave_cal, cal_ave_status],
-            "freq@average": f"{round(spurious_ave_freq / 1e9, 5)}GHz",
+        result[f_interval] = {
+            'spurious peak': [f'{round(peak)}dBm', peak_status],
+            'peak freq': f'{round(peak_freq) / 1e9}GHz',
+            'spurious ave (reading val)': [f'{round(ave)}dBm', m_ave_status],
+            'spurious ave (cal.)': [f'{round(cal_ave)}dBm', c_ave_status],
+            'ave freq.': f'{round(ave_freq) / 1e9}GHz'
         }
-        
-    return spurious_results
+
+    return result

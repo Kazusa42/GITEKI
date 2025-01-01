@@ -25,7 +25,7 @@ import time
 class SpectrumAnalyzer(object):
     def __init__(self, scpi_cmds: dict, ip_addr: str) -> None:
         self._scpi_cmds = scpi_cmds
-        self._retry_wait_sec = 0.5
+        self._wait_sec = 0.5
 
         self._connect_to_instr(ip_addr)
 
@@ -42,7 +42,6 @@ class SpectrumAnalyzer(object):
     def _set_parameter(self, param, value, delimiter=' '):
         if param == 'sweep_time' and value == 'AUTO ON':
             delimiter = ':'
-
         try:
             cfg_cmd = f"{self._scpi_cmds[param]}{delimiter}{value}"
             self._instr.write(cfg_cmd)
@@ -60,7 +59,7 @@ class SpectrumAnalyzer(object):
             self._set_parameter(param, value, delimiter)
 
     # prevent an overlapping execution of commands
-    def _wait_for_operation_complete(self) -> None:
+    def _wait(self) -> None:
         """Wait until the current operation is completed."""
         while True:
             try:
@@ -68,8 +67,8 @@ class SpectrumAnalyzer(object):
                     break
             except Exception as e:
                 print(f"Instrument is busy with {e}")
-                print(f"Retrying in {self._retry_wait_sec} seconds...")
-                time.sleep(self._retry_wait_sec)
+                print(f"Retrying in {self._wait_sec} seconds...")
+                time.sleep(self._wait_sec)
 
     def save_screenshot(self, img_path):
         try:
@@ -78,9 +77,7 @@ class SpectrumAnalyzer(object):
             self._instr.write("MMEM:NAME 'test.bmp'")
             self._instr.write("HCOP:IMM")
 
-            # prevent an overlapping execution of commands
-            self._wait_for_operation_complete()
-            
+            self._wait()  # prevent overlapping execution of commands
             image_data = self._instr.query_binary_values(
                 "MMEM:DATA? 'test.bmp'", datatype='B' ,container=bytearray
             )
@@ -97,14 +94,12 @@ class SpectrumAnalyzer(object):
                 return byte_data[newline_index + 1:]
             else:
                 return bytearray()
-            
+             
         try:
             self._instr.write("FORM ASC")
             self._instr.write("MMEM:STOR:TRAC 1,'test.DAT'")
 
-            # prevent an overlapping execution of commands
-            self._wait_for_operation_complete()
-
+            self._wait()  # prevent overlapping execution of commands
             trace_data = self._instr.query_binary_values(
                 "MMEM:DATA? 'test.DAT'", datatype='B', container=bytearray
             )
