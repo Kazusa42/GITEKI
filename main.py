@@ -47,14 +47,10 @@ def main():
     comps.Const.REPORT_DIR = os.path.join(comps.Const.WORKING_DIR, r'report')
     os.makedirs(comps.Const.REPORT_DIR, exist_ok=True)
 
-    # the ip address of spectrum analyzer
-    # TODO: require ip address automatically
-    # comps.Const.SPECTRUM_ANALYZER_IP_ADDR = r'192.168.0.1'
-
     # load test standard
     comps.Const.GITEKI_STANDARD = os.path.join(comps.Const.CONFIG_DIR, r'GITEKI.json')
     with open(comps.Const.GITEKI_STANDARD, 'r') as f:
-        giteki_dict = json.load(f)['measurements']
+        giteki_dict = json.load(f)
     print(" [INIT] GITEKI standard loaded successfully.")
 
     # load SCPI commands
@@ -64,12 +60,12 @@ def main():
     print(" [INIT] SCPI commands loaded successfully.")
 
     # init a excel file as report
-    measurement_start_time = time.strftime(r'%Y_%m_%d_%H_%M', time.localtime())
+    """measurement_start_time = time.strftime(r'%Y_%m_%d_%H_%M', time.localtime())
     report_file = os.path.join(comps.Const.REPORT_DIR, f"{measurement_start_time}_report.xlsx")
-    print(" [INIT] Report file created successfully.")
+    print(" [INIT] Report file created successfully.")"""
 
     # instance a spectrum analyzer
-    ip_addr = input("Plaese input the ip address of instrument: ")
+    ip_addr = input("- Plaese input the ip address of instrument: ")
     spectrum_analyzer = instr.SpectrumAnalyzer(scpi_cmds, ip_addr)
 
     # show a welcome menu and command list
@@ -86,7 +82,7 @@ def main():
         if user_input == 'obw' or user_input == 'sbw':
             # perform measurement
             obw_and_sbw_result = funcs.measure_obw_and_sbw(
-                spectrum_analyzer, giteki_dict['OBW_and_SBW'], comps.Const.WORKING_DIR, rule
+                spectrum_analyzer, giteki_dict['OBW_and_SBW'], rule
             )
             # display results on screen
             print("The measurement result for OBW and SBW is:")
@@ -97,10 +93,6 @@ def main():
                 "rule": rule,
                 "method": "general"
             }
-            funcs.write_report(report_file, "Measurement condition", test_condition)
-
-            # write results to report
-            funcs.write_report(report_file, "OBW_and_SBW", obw_and_sbw_result)
 
         elif user_input == 'peak power':
             # let user choose a method from 'general' and 'exception'
@@ -118,10 +110,6 @@ def main():
                 "rule": rule,
                 "method": method
             }
-            funcs.write_report(report_file, "Measurement condition", test_condition)
-
-            # write results to report
-            funcs.write_report(report_file, "peak power", peak_power_result)
 
         elif user_input == 'ave power':
             # let user choose a method from 'general' and 'exception'
@@ -140,10 +128,6 @@ def main():
                 "rule": rule,
                 "method": method
             }
-            funcs.write_report(report_file, "Measurement condition", test_condition)
-
-            # write results to report
-            funcs.write_report(report_file, "average power", ave_power_result)
 
         elif user_input == 'spurious':
             spurious_result = funcs.measure_spurious(
@@ -155,15 +139,12 @@ def main():
                 "rule": rule,
                 "method": "general"
             }
-            funcs.write_report(report_file, "Measurement condition", test_condition)
 
             # display results on screen and write results to report
             print("The measurement result for average power is:")
             for freq_range, result in spurious_result.items():
                 print(f"Spurious measurement result @ {freq_range} is:")
                 funcs.show_measurement_result(result)
-                print()
-                funcs.write_report(report_file, f"spurious @ {freq_range}", result)
 
         elif user_input == 'plot':
             ploter = comps.TracePlot(comps.Const.WORKING_DIR)

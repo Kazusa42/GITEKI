@@ -60,15 +60,10 @@ class SpectrumAnalyzer(object):
 
     # prevent an overlapping execution of commands
     def _wait(self) -> None:
-        """Wait until the current operation is completed."""
         while True:
-            try:
-                if self._instr.query("*OPC?").strip() == '1':
-                    break
-            except Exception as e:
-                print(f"Instrument is busy with {e}")
-                print(f"Retrying in {self._wait_sec} seconds...")
-                time.sleep(self._wait_sec)
+            if self._instr.query("*OPC?").strip() == '1':
+                break
+            time.sleep(self._wait_sec)
 
     def save_screenshot(self, img_path):
         try:
