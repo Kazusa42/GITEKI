@@ -4,7 +4,7 @@
 # Author: Zhang
 #
 # Create Date: 2024/11/15
-# Last Update on: 2024/11/15
+# Last Update on: 2025/01/06
 #
 # FILE: instrument.py
 # Description: Classe SpectrumAnalyzer is defined here
@@ -47,8 +47,6 @@ class SpectrumAnalyzer(object):
             self._instr.write(cfg_cmd)
         except KeyError:
             print(f"Parameter '{param}' not found in SCPI commands dict.")
-        except Exception as e:
-            print(f"Failed to set parameter '{param}': {e}")
 
     def config(self, param=None, value=None, delimiter=' '):
         if isinstance(param, dict):
@@ -58,8 +56,7 @@ class SpectrumAnalyzer(object):
         if isinstance(param, str) and value is not None:
             self._set_parameter(param, value, delimiter)
 
-    # prevent an overlapping execution of commands
-    def _wait(self) -> None:
+    def _wait(self):  # prevent overlapping execution of commands
         while True:
             if self._instr.query("*OPC?").strip() == '1':
                 break
@@ -109,7 +106,7 @@ class SpectrumAnalyzer(object):
 
     def aquire_peak_point(self):
         self._instr.write("CALC:MARK1:MAX")
-        x = float(self._instr.query(f"CALC:MARK1:X?"))  # freq value
+        x = float(self._instr.query(f"CALC:MARK1:X?"))  # freq. value
         y = float(self._instr.query(f"CALC:MARK1:Y?"))  # power value
         return x, y
 

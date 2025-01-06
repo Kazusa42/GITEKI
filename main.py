@@ -27,7 +27,6 @@ import utils.instrument as instr
 #---------------------------------------------------------------------------------
 
 def main():
-
     # working dir
     comps.Const.WORKING_DIR = os.path.dirname(__file__)
 
@@ -39,8 +38,8 @@ def main():
     os.makedirs(comps.Const.SSHOT_DIR, exist_ok=True)
 
     # ensure exists of trace data folder
-    comps.Const.TRACE_DATA_DIR = os.path.join(comps.Const.WORKING_DIR, r'trace_data')
-    os.makedirs(comps.Const.TRACE_DATA_DIR, exist_ok=True)
+    comps.Const.TRACE_DIR = os.path.join(comps.Const.WORKING_DIR, r'trace_data')
+    os.makedirs(comps.Const.TRACE_DIR, exist_ok=True)
 
     # ensure exists of report file folder
     comps.Const.REPORT_DIR = os.path.join(comps.Const.WORKING_DIR, r'report')
@@ -130,8 +129,8 @@ def main():
                 funcs.write_report(report_file, f'spurious @ {freq_range}', res)
 
         elif user_input == 'plot':
-            ploter = comps.TracePlot(comps.Const.WORKING_DIR)
-            ploter.plot(mask=giteki_dict['mask'][rule])
+            ploter = comps.TracePlot(comps.Const.TRACE_DIR)
+            ploter.plot(mask=giteki_dict['masks'][rule])
 
         elif user_input == 'set rule':
             rule = funcs.choose_condition("rule")

@@ -156,11 +156,11 @@ def unit_measurement(sa: instr.SpectrumAnalyzer, sa_config: dict):
     peak_freq, peak_power = sa.aquire_peak_point()
     return peak_freq, peak_power
 
-def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3'):
+def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3'):
     # calculate center freq. and span
-    start_freq = float(giteki_dict['masks'][rule]['obw'].split('~')[0])  #GHz
-    stop_freq = float(giteki_dict['masks'][rule]['obw'].split('~')[1])   #GHz
-    sbw_limit = float(giteki_dict['masks']['sbw']) * 1e3  # MHz
+    start_freq = float(standard['masks'][rule]['obw'].split('~')[0])  #GHz
+    stop_freq = float(standard['masks'][rule]['obw'].split('~')[1])   #GHz
+    sbw_limit = float(standard['masks']['sbw']) * 1e3  # MHz
     obw_limit = (stop_freq - start_freq) * 1e3  # MHz
     center_freq = (start_freq + stop_freq) / 2  # GHz
     
@@ -171,7 +171,7 @@ def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_
 
     # construct other cfg of spectrum analyzer
     sa_cfg = {'center_freq': f"{center_freq}GHz", 'span': f"{obw_limit * 3}MHz"}
-    sa_cfg.update(giteki_dict['obw_and_sbw'])
+    sa_cfg.update(standard['obw_and_sbw'])
 
     unit_measurement(sa, sa_cfg)  # perform measurement
     sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'obw_and_sbw.png'))  # save screenshot
@@ -194,14 +194,14 @@ def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_
         'sbw': [f"{sbw}MHz", sbw_status]
     }
 
-def measure_peak_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3', method='general'):
-    start_freq = f"{giteki_dict['masks'][rule]['obw'].split('~')[0]}GHz"
-    stop_freq = f"{giteki_dict['masks'][rule]['obw'].split('~')[1]}GHz"
+def measure_peak_power(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3', method='general'):
+    start_freq = f"{standard['masks'][rule]['obw'].split('~')[0]}GHz"
+    stop_freq = f"{standard['masks'][rule]['obw'].split('~')[1]}GHz"
 
     # construct spectrum analyzer config
     sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
-    sa_cfg.update(giteki_dict['search']['common'])
-    sa_cfg.update(giteki_dict['search']['diff']['peak']['general'])  # set RBW to 3MHz, VBW to 10MHz
+    sa_cfg.update(standard['search']['common'])
+    sa_cfg.update(standard['search']['diff']['peak']['general'])  # set RBW to 3MHz, VBW to 10MHz
 
     search_freq, _ = unit_measurement(sa, sa_cfg)  # search
     sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'peak_search.png'))
@@ -211,7 +211,7 @@ def measure_peak_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_2
     del sa_cfg['stop_freq']
     sa_cfg.update({'center_freq': search_freq, 'span': '100MHz'})
     if method != 'general':  # wide RBW to 50MHz if necessary
-        sa_cfg.update(giteki_dict['search']['diff']['peak']['exception'])
+        sa_cfg.update(standard['search']['diff']['peak']['exception'])
     
     search_freq, search_peak = unit_measurement(sa, sa_cfg)
     sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'peak_zoom_in_{method}.png'))
@@ -222,9 +222,9 @@ def measure_peak_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_2
     peak = corr_factor + search_peak
 
     # load limit
-    obw_key = giteki_dict['masks'][rule]['obw']
-    limit = giteki_dict['masks'][rule][obw_key]['peak']
-    dev = giteki_dict['masks'][rule][obw_key]['allowable_dev']
+    obw_key = standard['masks'][rule]['obw']
+    limit = standard['masks'][rule][obw_key]['peak']
+    dev = standard['masks'][rule][obw_key]['allowable_dev']
     limit = 10 * math.log10((10 ** (limit / 10)) * (1 + dev))
 
     status = 'Passed' if peak <= limit else 'Failed'
@@ -236,14 +236,14 @@ def measure_peak_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_2
         'peak (reading val. + corr. factor)': [f"{round(peak, 2)}dBm", status]
     }
 
-def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3', method='general'):
-    freq_interval = giteki_dict['masks'][rule]['obw']
+def measure_ave_power(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3', method='general'):
+    freq_interval = standard['masks'][rule]['obw']
     start_freq = f"{freq_interval.split('~')[0]}GHz"
     stop_freq = f"{freq_interval.split('~')[1]}GHz"
 
     # construct spectrum analyzer config
     sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
-    sa_cfg.update(giteki_dict['search']['common'])
+    sa_cfg.update(standard['search']['common'])
 
     search_freq, _ = unit_measurement(sa, sa_cfg)  # search
     sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'ave_search.png'))
@@ -260,7 +260,7 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27
     # measure step
     sa_cfg.update({'center_freq': search_freq})
     if method == 'general':  # use SMP detector to measure and claculate
-        sa_cfg.update(giteki_dict['measure']['common'])
+        sa_cfg.update(standard['measure']['common'])
         measure_freq, _ = unit_measurement(sa, sa_cfg)
         sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
 
@@ -270,17 +270,17 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27
         ave = t_cal.calculate_ave_power()
 
     else:  # use RMS detector to measure
-        sa_cfg.update(giteki_dict['measure']['diff']['ave'])
+        sa_cfg.update(standard['measure']['diff']['ave'])
         measure_freq, ave = unit_measurement(sa, sa_cfg)
 
     sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'ave_measure_{method}.png'))
     
     # load limit
-    obw_key = giteki_dict['masks'][rule]['obw']
-    d_freq = giteki_dict['masks'][rule][obw_key]['dividing_freq']
+    obw_key = standard['masks'][rule]['obw']
+    d_freq = standard['masks'][rule][obw_key]['dividing_freq']
     idx = '1' if measure_freq <= d_freq else '2'
-    limit = giteki_dict['masks'][rule][obw_key][f'ave{idx}']
-    dev = giteki_dict['masks'][rule][obw_key]['allowable_dev']
+    limit = standard['masks'][rule][obw_key][f'ave{idx}']
+    dev = standard['masks'][rule][obw_key]['allowable_dev']
     limit = 10 * math.log10((10 ** (limit / 10)) * (1 + dev))
 
     status = 'Passed' if ave <= limit else 'Failed'
@@ -290,11 +290,11 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27
         'freq': f"{round(measure_freq / 1e9, 5)}GHz"
     }
 
-def measure_spurious(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_3'):
+def measure_spurious(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3'):
     result = {}
-    freq_intervals = giteki_dict['masks'][rule].copy()
+    freq_intervals = standard['masks'][rule].copy()
     
-    del freq_intervals[giteki_dict['masks'][rule]['obw']]
+    del freq_intervals[standard['masks'][rule]['obw']]
     del freq_intervals['obw']
 
     # iterate all spurious freq. band
@@ -304,15 +304,15 @@ def measure_spurious(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_
 
         # search step
         sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
-        sa_cfg.update(giteki_dict['search']['common'])
+        sa_cfg.update(standard['search']['common'])
 
         search_freq, search_peak = unit_measurement(sa, sa_cfg)
         sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'spu_search_{f_interval}.png'))
         # to draw plot
         sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{f_interval}.csv'))  
 
-        ave_limit = giteki_dict['masks'][rule][f_interval]['ave']
-        peak_limit = giteki_dict['masks'][rule][f_interval]['peak']
+        ave_limit = standard['masks'][rule][f_interval]['ave']
+        peak_limit = standard['masks'][rule][f_interval]['peak']
 
         peak = ave = cal_ave = peak_freq = ave_freq = None
         if search_peak <= ave_limit:
@@ -335,7 +335,7 @@ def measure_spurious(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_
             
             if ave is None:  # measure step if necessary
                 sa_cfg.update({'center_freq': search_freq})
-                sa_cfg.update(giteki_dict['measure']['common'])
+                sa_cfg.update(standard['measure']['common'])
                 ave_freq, ave = unit_measurement(sa, sa_cfg)
 
                 # save trace data to get calculate average
