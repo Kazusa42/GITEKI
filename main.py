@@ -27,8 +27,8 @@ import utils.instrument as instr
 #---------------------------------------------------------------------------------
 
 def main():
-    # working dir
-    comps.Const.WORKING_DIR = os.path.dirname(__file__)
+    
+    comps.Const.WORKING_DIR = os.path.dirname(__file__)  # working dir
 
     # dir where all json file is saved
     comps.Const.CFG_DIR = os.path.join(comps.Const.WORKING_DIR, r'config')
@@ -47,10 +47,10 @@ def main():
 
     # load standard
     # TODO: support radio low in other region
-    comps.Const.GITEKI_STANDARD = os.path.join(comps.Const.CFG_DIR, r'GITEKI.json')
-    with open(comps.Const.GITEKI_STANDARD, 'r') as f:
-        giteki_dict = json.load(f)
-    print("- [INIT] GITEKI standard loaded successfully.")
+    comps.Const.STANDARD = os.path.join(comps.Const.CFG_DIR, r'GITEKI.json')
+    with open(comps.Const.STANDARD, 'r') as f:
+        standard_dict = json.load(f)
+    print("- [INIT] Standard loaded successfully.")
 
     # load SCPI commands
     comps.Const.SCPI_COMMANDS = os.path.join(comps.Const.CFG_DIR, r'scpi_commands.json')
@@ -76,7 +76,7 @@ def main():
         user_input = input('- Waiting for command: ').lower()
         if user_input == 'obw' or user_input == 'sbw':
             # perform measurement
-            result = funcs.measure_obw_and_sbw(sa, giteki_dict, rule)
+            result = funcs.measure_obw_and_sbw(sa, standard_dict, rule)
             print("The measurement result for OBW and SBW is:")
             funcs.show_measurement_result(result)  # display results
 
@@ -91,7 +91,7 @@ def main():
                 "method", 'Set RBW to 50MHz at measure step. Easier to pass the test.'
             )
 
-            result = funcs.measure_peak_power(sa, giteki_dict, rule, method)
+            result = funcs.measure_peak_power(sa, standard_dict, rule, method)
             print("The measurement result for peak power is:")
             funcs.show_measurement_result(result)  # display results
 
@@ -104,7 +104,7 @@ def main():
             # let user choose a method from 'general' and 'exception'
             method = funcs.choose_condition("method", 'Use RMS detector at measure step.')
 
-            result = funcs.measure_ave_power(sa, giteki_dict, rule, method)
+            result = funcs.measure_ave_power(sa, standard_dict, rule, method)
             print("The measurement result for average power is:")
             funcs.show_measurement_result(result)   # display results
 
@@ -114,7 +114,7 @@ def main():
             funcs.write_report(report_file, 'average power', result)
 
         elif user_input == 'spurious':
-            result = funcs.measure_spurious(sa, giteki_dict, rule)
+            result = funcs.measure_spurious(sa, standard_dict, rule)
 
             # write test condition to report
             test_condition = {"rule": rule, "method": "general"}
@@ -130,7 +130,7 @@ def main():
 
         elif user_input == 'plot':
             ploter = comps.TracePlot(comps.Const.TRACE_DIR)
-            ploter.plot(mask=giteki_dict['masks'][rule])
+            ploter.plot(mask=standard_dict['masks'][rule])
 
         elif user_input == 'set rule':
             rule = funcs.choose_condition("rule")
