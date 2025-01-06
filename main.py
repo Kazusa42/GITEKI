@@ -32,119 +32,102 @@ def main():
     comps.Const.WORKING_DIR = os.path.dirname(__file__)
 
     # dir where all json file is saved
-    comps.Const.CONFIG_DIR = os.path.join(comps.Const.WORKING_DIR, r'config')
-    os.makedirs(comps.Const.CONFIG_DIR, exist_ok=True)
+    comps.Const.CFG_DIR = os.path.join(comps.Const.WORKING_DIR, r'config')
 
-    # dir where all screenshots is saved
-    comps.Const.SCREENSHOT_DIR = os.path.join(comps.Const.WORKING_DIR, r'screenshots')
-    os.makedirs(comps.Const.SCREENSHOT_DIR, exist_ok=True)
+    # ensure exists of screenshots folder
+    comps.Const.SSHOT_DIR = os.path.join(comps.Const.WORKING_DIR, r'screenshots')
+    os.makedirs(comps.Const.SSHOT_DIR, exist_ok=True)
 
-    # dir where all trace data is saved
+    # ensure exists of trace data folder
     comps.Const.TRACE_DATA_DIR = os.path.join(comps.Const.WORKING_DIR, r'trace_data')
     os.makedirs(comps.Const.TRACE_DATA_DIR, exist_ok=True)
 
-    # dir to save report
+    # ensure exists of report file folder
     comps.Const.REPORT_DIR = os.path.join(comps.Const.WORKING_DIR, r'report')
     os.makedirs(comps.Const.REPORT_DIR, exist_ok=True)
 
-    # load test standard
-    comps.Const.GITEKI_STANDARD = os.path.join(comps.Const.CONFIG_DIR, r'GITEKI.json')
+    # load standard
+    # TODO: support radio low in other region
+    comps.Const.GITEKI_STANDARD = os.path.join(comps.Const.CFG_DIR, r'GITEKI.json')
     with open(comps.Const.GITEKI_STANDARD, 'r') as f:
         giteki_dict = json.load(f)
-    print(" [INIT] GITEKI standard loaded successfully.")
+    print("- [INIT] GITEKI standard loaded successfully.")
 
     # load SCPI commands
-    comps.Const.SCPI_COMMANDS = os.path.join(comps.Const.CONFIG_DIR, r'scpi_commands.json')
+    comps.Const.SCPI_COMMANDS = os.path.join(comps.Const.CFG_DIR, r'scpi_commands.json')
     with open(comps.Const.SCPI_COMMANDS, 'r') as f:
         scpi_cmds = json.load(f)['scpi_cmds']
-    print(" [INIT] SCPI commands loaded successfully.")
+    print("- [INIT] SCPI commands loaded successfully.")
 
     # init a excel file as report
-    """measurement_start_time = time.strftime(r'%Y_%m_%d_%H_%M', time.localtime())
-    report_file = os.path.join(comps.Const.REPORT_DIR, f"{measurement_start_time}_report.xlsx")
-    print(" [INIT] Report file created successfully.")"""
+    start_time = time.strftime(r'%Y_%m_%d_%H_%M', time.localtime())
+    report_file = os.path.join(comps.Const.REPORT_DIR, f"{start_time}_report.xlsx")
+    print("- [INIT] Report file created successfully.")
 
     # instance a spectrum analyzer
     ip_addr = input("- Plaese input the ip address of instrument: ")
-    spectrum_analyzer = instr.SpectrumAnalyzer(scpi_cmds, ip_addr)
+    sa = instr.SpectrumAnalyzer(scpi_cmds, ip_addr)
 
-    # show a welcome menu and command list
-    funcs.menu()
+    funcs.menu()  # show a welcome menu and command list
 
-    # let user choose a rule from '49_27_3' and '49_27_4'
+    # choose a rule from '49_27_3' and '49_27_4'
     rule = funcs.choose_condition("rule")
-    print(f"#--------------------------------------------------------------#")
-    print(f"#  All measurements will be conducted to align rule: {rule}.  #")
-    print(f"#--------------------------------------------------------------#\n")
 
     while True:
         user_input = input('- Waiting for command: ').lower()
         if user_input == 'obw' or user_input == 'sbw':
             # perform measurement
-            obw_and_sbw_result = funcs.measure_obw_and_sbw(
-                spectrum_analyzer, giteki_dict['OBW_and_SBW'], rule
-            )
-            # display results on screen
+            result = funcs.measure_obw_and_sbw(sa, giteki_dict, rule)
             print("The measurement result for OBW and SBW is:")
-            funcs.show_measurement_result(obw_and_sbw_result)
+            funcs.show_measurement_result(result)  # display results
 
-            # write test condition to report
-            test_condition = {
-                "rule": rule,
-                "method": "general"
-            }
+            # write report
+            test_condition = {"rule": rule, "method": "general"}
+            funcs.write_report(report_file, 'Measure condition', test_condition)
+            funcs.write_report(report_file, 'obw and sbw', result)
 
         elif user_input == 'peak power':
             # let user choose a method from 'general' and 'exception'
-            method = funcs.choose_condition("method")
-
-            peak_power_result = funcs.measure_peak_power(
-                spectrum_analyzer, giteki_dict['peak_power'], comps.Const.WORKING_DIR, rule, method
+            method = funcs.choose_condition(
+                "method", 'Set RBW to 50MHz at measure step. Easier to pass the test.'
             )
-            # display results on screen
-            print("The measurement result for peak power is:")
-            funcs.show_measurement_result(peak_power_result)
 
-            # write test condition to report
-            test_condition = {
-                "rule": rule,
-                "method": method
-            }
+            result = funcs.measure_peak_power(sa, giteki_dict, rule, method)
+            print("The measurement result for peak power is:")
+            funcs.show_measurement_result(result)  # display results
+
+            # write report
+            test_condition = {"rule": rule, "method": method}
+            funcs.write_report(report_file, 'Measure condition', test_condition)
+            funcs.write_report(report_file, 'peak power', result)
 
         elif user_input == 'ave power':
             # let user choose a method from 'general' and 'exception'
-            method = funcs.choose_condition("method")
+            method = funcs.choose_condition("method", 'Use RMS detector at measure step.')
 
-            ave_power_result = funcs.measure_ave_power(
-                spectrum_analyzer, giteki_dict['average_power'], comps.Const.WORKING_DIR, rule, method
-            )
-
-            # display results on screen
+            result = funcs.measure_ave_power(sa, giteki_dict, rule, method)
             print("The measurement result for average power is:")
-            funcs.show_measurement_result(ave_power_result)
+            funcs.show_measurement_result(result)   # display results
 
-            # write test condition to report
-            test_condition = {
-                "rule": rule,
-                "method": method
-            }
+            # write report
+            test_condition = {"rule": rule, "method": method}
+            funcs.write_report(report_file, 'Measure condition', test_condition)
+            funcs.write_report(report_file, 'average power', result)
 
         elif user_input == 'spurious':
-            spurious_result = funcs.measure_spurious(
-                spectrum_analyzer, giteki_dict['spurious'], comps.Const.WORKING_DIR, rule
-            )
+            result = funcs.measure_spurious(sa, giteki_dict, rule)
 
             # write test condition to report
-            test_condition = {
-                "rule": rule,
-                "method": "general"
-            }
+            test_condition = {"rule": rule, "method": "general"}
+            funcs.write_report(report_file, 'Measure condition', test_condition)
 
             # display results on screen and write results to report
             print("The measurement result for average power is:")
-            for freq_range, result in spurious_result.items():
+            for freq_range, res in result.items():
                 print(f"Spurious measurement result @ {freq_range} is:")
-                funcs.show_measurement_result(result)
+                funcs.show_measurement_result(res)
+                print()
+                funcs.write_report(report_file, f'spurious @ {freq_range}', res)
 
         elif user_input == 'plot':
             ploter = comps.TracePlot(comps.Const.WORKING_DIR)
@@ -152,12 +135,9 @@ def main():
 
         elif user_input == 'set rule':
             rule = funcs.choose_condition("rule")
-            print(f"#--------------------------------------------------------------#")
-            print(f"#  All measurements will be conducted to align rule: {rule}.  #")
-            print(f"#--------------------------------------------------------------#\n")
 
         elif user_input == 'exit':
-            spectrum_analyzer.close()
+            sa.close()
             sys.exit("Exiting by user input...")
             
         else:

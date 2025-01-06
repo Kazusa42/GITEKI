@@ -4,10 +4,10 @@
 # Author: Zhang
 #
 # Create Date: 2024/11/14
-# Last Update on: 2024/12/04
+# Last Update on: 2025/01/06
 #
-# FILE: component.py
-# Description: Basic components are defined here
+# FILE: functions.py
+# Description: Basic functions are defined here
 #---------------------------------------------------------------------------------
 
 #---------------------------------------------------------------------------------
@@ -46,7 +46,7 @@ comps.Const.TRACE_DIR = os.path.join(comps.Const.MAIN_DIR, 'trace_data')
 # DEFINE FUNCTIONS HERE
 
 def menu() -> None:
-    print(f"Initialize successfully. Starting the program...")
+    print(f"- Initialize successfully. Starting the program...")
     time.sleep(2)
     os.system('cls') if platform.system() == 'Windows' else os.system('clear')
     print(f'# ----------------------------------------------------------------------------- #')
@@ -124,29 +124,33 @@ def write_report(report_file, text, data_dict):
     workbook.save(report_file)
     workbook.close()
 
-def choose_condition(condition_type) -> str:
+def choose_condition(condition_type, prompt=None) -> str:
     if condition_type == 'rule':
-        print("Please select a rule: 1) 49_27_3; 2) 49_27_4.")
+        print("- Please select a rule:  (1) 49_27_3;  (2) 49_27_4.")
         user_input = input("Waiting for index of rule: ")
-        return "49_27_3" if user_input == '1' else "49_27_4"
+        rule = "49_27_3" if user_input == '1' else "49_27_4"
+        print(f"#--------------------------------------------------------------#")
+        print(f"#  All measurements will be conducted to align rule: {rule}.  #")
+        print(f"#--------------------------------------------------------------#\n")
+        return rule
+    
     elif condition_type == 'method':
-        print("Please select a method: 1) general; 2) exception.")
-        print("  - General  : the basic method describled in rule book.")
-        print("  - Exception: other methods, such as wide RBW to 50MHz;")
-        print("               or use RMS detector to measure average power.")
+        print("- Please select a method:  (1) general;  (2) exception.")
+        print(f"  - General  : Basic method describled in rule book.")
+        print(f"  - Exception: {prompt}")
         user_input = input("Waiting for index of method: ")
         return "general" if user_input == '1' else "exception"
     else:
         return None
 
 def unit_measurement(sa: instr.SpectrumAnalyzer, sa_config: dict):
-    show_configure(sa_config)  # display spectrum analyzer
+    show_configure(sa_config)  # display spectrum analyzer configure
 
     sa.config(param='continues_sweep', value='OFF')  # stop sweep
-    input('Waiting for board launch up. Press enter to start measurement.')
+    input('- Waiting for board launch up. Press enter to start measurement.')
 
     sa.config(param=sa_config)  # start continues sweep
-    input(f"Waiting trace to stabilize. Press Enter to stop sweep.")
+    input(f"- Waiting trace to stabilize. Press Enter to stop sweep.")
     sa.config(param='continues_sweep', value='OFF')  # stop sweep
 
     peak_freq, peak_power = sa.aquire_peak_point()
@@ -255,7 +259,7 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27
 
     # measure step
     sa_cfg.update({'center_freq': search_freq})
-    if method == 'general':
+    if method == 'general':  # use SMP detector to measure and claculate
         sa_cfg.update(giteki_dict['measure']['common'])
         measure_freq, _ = unit_measurement(sa, sa_cfg)
         sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
@@ -265,7 +269,7 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27
         t_cal.read_trace_data(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
         ave = t_cal.calculate_ave_power()
 
-    else:
+    else:  # use RMS detector to measure
         sa_cfg.update(giteki_dict['measure']['diff']['ave'])
         measure_freq, ave = unit_measurement(sa, sa_cfg)
 
@@ -304,7 +308,8 @@ def measure_spurious(sa: instr.SpectrumAnalyzer, giteki_dict: dict, rule='49_27_
 
         search_freq, search_peak = unit_measurement(sa, sa_cfg)
         sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'spu_search_{f_interval}.png'))
-        sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{f_interval}.csv'))  # to draw plot
+        # to draw plot
+        sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{f_interval}.csv'))  
 
         ave_limit = giteki_dict['masks'][rule][f_interval]['ave']
         peak_limit = giteki_dict['masks'][rule][f_interval]['peak']
