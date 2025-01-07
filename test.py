@@ -52,29 +52,26 @@ class TracePlot:
         mask: giteki_dict['masks'][rule]
         """
         new_mask = {'freq': [], 'ave_limit': [], 'peak_limit': []}
-        obw = mask['obw']
-    
-        tmp_mask = mask.copy()
+        def add(freq, peak, ave):
+            new_mask['freq'].append(float(freq))
+            new_mask['ave_limit'].append(float(ave))
+            new_mask['peak_limit'].append(float(peak))
+
+        obw, tmp_mask = mask['obw'], mask.copy()
         del tmp_mask['obw']
         for freq_range, limit in tmp_mask.items():
             if freq_range != obw:
                 for idx in [0, 1]:
                     freq = float(freq_range.split('~')[idx])
                     if freq not in new_mask['freq']:
-                        new_mask['freq'].append(freq)
-                        new_mask['ave_limit'].append(float(limit['ave']))
-                        new_mask['peak_limit'].append(float(limit['peak']))
+                        add(freq, limit['peak'], limit['ave'])
             else:
-                d_freq = float(limit['dividing_freq'])
-                new_mask['freq'].append(d_freq)
-                new_mask['ave_limit'].append(float(limit['ave1']))
-                new_mask['peak_limit'].append(float(limit['peak']))
+                freq = float(limit['dividing_freq'])
+                add(freq, limit['peak'], limit['ave1'])
 
                 freq = float(freq_range.split('~')[1])
                 if freq not in new_mask['freq']:
-                    new_mask['freq'].append(freq)
-                    new_mask['ave_limit'].append(float(limit['ave2']))
-                    new_mask['peak_limit'].append(float(limit['peak']))
+                    add(freq, limit['peak'], limit['ave2'])
         return new_mask
     
     def plot(self, mask: dict = None, figsize=(18, 6)):
@@ -97,4 +94,4 @@ with open(r'C:\Users\a5149517\Desktop\GITEKI\config\GITEKI.json', 'r') as f:
     giteki_dict = json.load(f)
 
 tmp = TracePlot(r'C:\Users\a5149517\Desktop\GITEKI\trace_data')
-tmp.plot(giteki_dict['masks']['49_27_4'])
+tmp.plot(giteki_dict['masks']['49_27_3'])
