@@ -4,7 +4,7 @@
 # Author: Zhang
 #
 # Create Date: 2024/11/14
-# Last Update on: 2024/11/15
+# Last Update on: 2024/01/06
 #
 # FILE: component.py
 # Description: Basic components are defined here
@@ -34,7 +34,7 @@ class TraceDataCalculator:
     def __init__(self) -> None:
         self.data = pd.DataFrame()
 
-    def read_trace_data(self, file_path: str):
+    def load_trace(self, file_path: str):
         # load raw data from csv file
         self.df = pd.read_csv(file_path, header=None)
         self.df = self.df.apply(pd.to_numeric, errors='coerce')
@@ -81,14 +81,14 @@ class TraceDataCalculator:
 
 class TracePlot:
     def __init__(self, trace_dir='trace_data'):
-        self.trace_files = [
+        self._trace_files = [
             f for f in os.listdir(trace_dir) if f.startswith('trace')
         ]
         self._verify_data_integrity()
         self.data = self._load_data(trace_dir)
 
     def _verify_data_integrity(self, p_end=r'~([\d.]+)\.csv', p_start=r'_([\d.]+)~'):
-        trace_files = sorted(self.trace_files,
+        trace_files = sorted(self._trace_files,
                              key=lambda name: float(re.search(p_start, name).group(1)))
         for idx in range(len(trace_files) - 1):
             curr_end = re.search(p_end, trace_files[idx]).group(1)
@@ -96,11 +96,11 @@ class TracePlot:
             if curr_end != next_start:
                 missing_freq = f"{curr_end}~{next_start}"
                 raise FileNotFoundError(f"Missing trace for freq range: {missing_freq}")
-        self.trace_files = trace_files
+        self._trace_files = trace_files
             
     def _load_data(self, trace_dir) -> pd.DataFrame:
         density, all_data = float('inf'), []
-        for f in self.trace_files:
+        for f in self._trace_files:
             df = pd.read_csv(os.path.join(trace_dir, f)).apply(pd.to_numeric, errors='coerce')
             h_idx = df.iloc[:, 0].apply(pd.to_numeric, errors='coerce').first_valid_index()
             data = df.iloc[h_idx:, :2]

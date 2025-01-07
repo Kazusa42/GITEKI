@@ -79,24 +79,24 @@ def show_measurement_result(result_dict: dict, headers=None):
             for value in result_dict.values()
         ))
     col_widths = [max(width, len(headers[i])) for i, width in enumerate(col_widths)]
-    separator = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
+    sep = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
 
-    print(f"{separator}\n{format_row(*headers)}\n{separator}")
+    print(f"{sep}\n{format_row(*headers)}\n{sep}")
     for key, value in result_dict.items():
         row = [key] + (value if isinstance(value, list) else [value, "-----"])
         print(format_row(*row[:len(headers)]))
-    print(separator)
+    print(sep)
 
-def show_configure(config_dict: dict):
+def show_configure(cfg_dict: dict):
     def format_row(items):
         return "| " + " | ".join(f"{str(item):<{col_widths[i]}}" for i, item in enumerate(items)) + " |"
     
-    keys, values = list(config_dict.keys()), list(config_dict.values())
-    col_widths = [max(len(str(key)), len(str(value))) for key, value in config_dict.items()]
-    separator = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
+    keys, values = list(cfg_dict.keys()), list(cfg_dict.values())
+    col_widths = [max(len(str(key)), len(str(value))) for key, value in cfg_dict.items()]
+    sep = "+" + "+".join("-" * (width + 2) for width in col_widths) + "+"
 
     print(f"- Measureing Condition: ")
-    print(f"{separator}\n{format_row(keys)}\n{separator}\n{format_row(values)}\n{separator}")
+    print(f"{sep}\n{format_row(keys)}\n{sep}\n{format_row(values)}\n{sep}")
 
 def write_report(report_file, text, data_dict):
     try:
@@ -105,21 +105,21 @@ def write_report(report_file, text, data_dict):
         workbook = openpyxl.Workbook()
     sheet = workbook.active
 
-    row = 1
-    while sheet.cell(row=row, column=1).value is not None:
-        row += 1
+    row_idx = 1
+    while sheet.cell(row=row_idx, column=1).value is not None:
+        row_idx += 1
 
-    sheet.cell(row=row, column=1, value=text)
-    row += 1
+    sheet.cell(row=row_idx, column=1, value=text)
+    row_idx += 1
 
     for key, value in data_dict.items():
-        sheet.cell(row=row, column=1, value=key)
+        sheet.cell(row=row_idx, column=1, value=key)
         if isinstance(value, list) and len(value) == 2:
-            sheet.cell(row=row, column=2, value=value[0])
-            sheet.cell(row=row, column=3, value=value[1])
+            sheet.cell(row=row_idx, column=2, value=value[0])
+            sheet.cell(row=row_idx, column=3, value=value[1])
         else:
-            sheet.cell(row=row, column=2, value=value)
-        row += 1
+            sheet.cell(row=row_idx, column=2, value=value)
+        row_idx += 1
 
     workbook.save(report_file)
     workbook.close()
@@ -143,9 +143,9 @@ def choose_condition(condition_type, prompt=None) -> str:
     else:
         return None
 
-def unit_measurement(sa: instr.SpectrumAnalyzer, sa_config: dict):
+def unit_measurement(sa: instr.SpectrumAnalyzer, sa_config: dict) -> tuple:
+    """ Perform a measurement with sa_cfg """
     show_configure(sa_config)  # display spectrum analyzer configure
-
     sa.config(param='continues_sweep', value='OFF')  # stop sweep
     input('- Waiting for board launch up. Press enter to start measurement.')
 
@@ -153,8 +153,7 @@ def unit_measurement(sa: instr.SpectrumAnalyzer, sa_config: dict):
     input(f"- Waiting trace to stabilize. Press Enter to stop sweep.")
     sa.config(param='continues_sweep', value='OFF')  # stop sweep
 
-    peak_freq, peak_power = sa.aquire_peak_point()
-    return peak_freq, peak_power
+    return sa.aquire_peak_point()  # return (freq. power)
 
 def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3'):
     # calculate center freq. and span
@@ -169,22 +168,22 @@ def measure_obw_and_sbw(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_
     sa.config(param='obw_measure', value='SEL OBW', delimiter=':')
     sa.config(param='obw_measure', value='RES? OBW', delimiter=':')
 
-    # construct other cfg of spectrum analyzer
+    # construct cfg of spectrum analyzer
     sa_cfg = {'center_freq': f"{center_freq}GHz", 'span': f"{obw_limit * 3}MHz"}
     sa_cfg.update(standard['obw_and_sbw'])
 
     unit_measurement(sa, sa_cfg)  # perform measurement
-    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'obw_and_sbw.png'))  # save screenshot
-    sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'obw_and_sbw.csv'))  # save trace data
+    sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'obw_and_sbw.png'))
+    sa.save_trace(os.path.join(comps.Const.TRACE_DIR, f'obw_and_sbw.csv'))
 
     # use trace data to calculate obw and sbw
     global t_cal
-    t_cal.read_trace_data('obw_and_sbw.csv')
+    t_cal.load_trace('obw_and_sbw.csv')
     obw, l_freq, r_freq = t_cal.calculate_obw()  # calculate obw
+    sbw = t_cal.calculate_sbw()  # calculate abw
     obw_status = "Passed" if obw <= obw_limit else "Failed"
     l_freq_status = "Passed" if l_freq >= start_freq else "Failed"
     r_freq_status = "Passed" if r_freq <= stop_freq else "Failed"
-    sbw = t_cal.calculate_sbw()  # calculate abw
     sbw_status = "Passed" if sbw >= sbw_limit else "Failed"
 
     return {
@@ -247,7 +246,7 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3'
 
     search_freq, _ = unit_measurement(sa, sa_cfg)  # search
     sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'ave_search.png'))
-    sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{freq_interval}.csv'))  # to draw plot
+    sa.save_trace(os.path.join(comps.Const.TRACE_DIR, f'trace_{freq_interval}.csv'))  # to draw plot
 
     # zoom in with span 100MHz and 10MHz
     del sa_cfg['start_freq']
@@ -262,11 +261,11 @@ def measure_ave_power(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3'
     if method == 'general':  # use SMP detector to measure and claculate
         sa_cfg.update(standard['measure']['common'])
         measure_freq, _ = unit_measurement(sa, sa_cfg)
-        sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
+        sa.save_trace(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
 
         # use trace data to calculate average power
         global t_cal
-        t_cal.read_trace_data(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
+        t_cal.load_trace(os.path.join(comps.Const.TRACE_DIR, f'ave_measure.csv'))
         ave = t_cal.calculate_ave_power()
 
     else:  # use RMS detector to measure
@@ -305,14 +304,13 @@ def measure_spurious(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3')
         # search step
         sa_cfg = {'start_freq': start_freq, 'stop_freq': stop_freq}
         sa_cfg.update(standard['search']['common'])
-
         search_freq, search_peak = unit_measurement(sa, sa_cfg)
         sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'spu_search_{f_interval}.png'))
-        # to draw plot
-        sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'trace_{f_interval}.csv'))  
+        sa.save_trace(os.path.join(comps.Const.TRACE_DIR, f'trace_{f_interval}.csv'))  # to draw plot
 
         ave_limit = standard['masks'][rule][f_interval]['ave']
         peak_limit = standard['masks'][rule][f_interval]['peak']
+        print(f"Search val.: {search_peak}; Ave. limit: {ave_limit}; Peak limit: {peak_limit}.")
 
         peak = ave = cal_ave = peak_freq = ave_freq = None
         if search_peak <= ave_limit:
@@ -325,10 +323,12 @@ def measure_spurious(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3')
             del sa_cfg['start_freq']
             del sa_cfg['stop_freq']
 
-            for span in ['100MHz', '10MHz']:  # zoom in step
+            for span in ['100MHz', '10MHz']:
                 sa_cfg.update({'center_freq': search_freq, 'span': span})
                 search_freq, search_peak = unit_measurement(sa, sa_cfg)
-                sa.save_screenshot(os.path.join(comps.Const.SSHOT_DIR, f'spu_zoom_in_span={span}_{f_interval}.png'))
+                sa.save_screenshot(os.path.join(
+                    comps.Const.SSHOT_DIR, f'spu_zoom_in_span={span}_{f_interval}.png'
+                ))
 
             if peak is None:  # update peak result if necessary
                 peak, peak_freq = search_peak, search_freq
@@ -339,9 +339,9 @@ def measure_spurious(sa: instr.SpectrumAnalyzer, standard: dict, rule='49_27_3')
                 ave_freq, ave = unit_measurement(sa, sa_cfg)
 
                 # save trace data to get calculate average
-                sa.save_trace_to_csv(os.path.join(comps.Const.TRACE_DIR, f'spu_ave_measure_{f_interval}.csv'))
+                sa.save_trace(os.path.join(comps.Const.TRACE_DIR, f'spu_ave_measure_{f_interval}.csv'))
                 global t_cal
-                t_cal.read_trace_data(os.path.join(comps.Const.TRACE_DIR, f'spu_ave_measure_{f_interval}.csv'))
+                t_cal.load_trace(os.path.join(comps.Const.TRACE_DIR, f'spu_ave_measure_{f_interval}.csv'))
                 cal_ave = t_cal.calculate_ave_spurious()
 
         # pass / fail determination

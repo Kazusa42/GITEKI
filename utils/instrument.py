@@ -25,7 +25,7 @@ import time
 class SpectrumAnalyzer(object):
     def __init__(self, scpi_cmds: dict, ip_addr: str) -> None:
         self._scpi_cmds = scpi_cmds
-        self._wait_sec = 0.5
+        self._wait_sec = 0.5  # retry after 0.5 sec
 
         self._connect_to_instr(ip_addr)
 
@@ -34,7 +34,7 @@ class SpectrumAnalyzer(object):
         try:
             self._instr = self._rm.open_resource(f"TCPIP::{ip_addr}::INSTR")
         except Exception as e:
-            raise ConnectionError(f'Failed to connect to instrument: {e}.')
+            raise ConnectionError(f'Connection failed: {e}.')
         
         instr_info = self._instr.query('*IDN?')
         print(f"Connected to: {instr_info.strip()} successfully.")
@@ -79,7 +79,7 @@ class SpectrumAnalyzer(object):
         except Exception as e:
             print(f"Failed to save screenshot: {e}")
 
-    def save_trace_to_csv(self, csv_path):
+    def save_trace(self, csv_path):
         def remove_first_line(byte_data: bytearray):
             newline_index = byte_data.find(b'\n')
             if newline_index != -1:

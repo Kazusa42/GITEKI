@@ -79,7 +79,7 @@ def measure_obw_and_sbw(spectrun_analyzer: instr.SpectrumAnalyzer, standard: dic
     # save trace data
     trace_data_save_dir = os.path.join(working_dir, r'trace_data')
     trace_data_file = os.path.join(trace_data_save_dir, f'obw_and_sbw_{rule}.csv')
-    spectrun_analyzer.save_trace_to_csv(trace_data_file)
+    spectrun_analyzer.save_trace(trace_data_file)
 
     # close temporary markers for obw measurement
     spectrun_analyzer.config(param='obw_measure', value='OFF')
@@ -255,7 +255,7 @@ def measure_ave_power(spectrum_analyzer: instr.SpectrumAnalyzer, standard: dict,
         # save trace data to csv file
         trace_data_save_dir = os.path.join(working_dir, r'trace_data')
         trace_data_file = os.path.join(trace_data_save_dir, f'ave_power_measure_{rule}_{method}.csv')
-        spectrum_analyzer.save_trace_to_csv(trace_data_file)
+        spectrum_analyzer.save_trace(trace_data_file)
 
         # calculate average power from trace data
         calculater = comps.TraceDataCalculator(trace_data_file, {})
