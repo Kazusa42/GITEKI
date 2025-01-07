@@ -40,21 +40,21 @@ class TraceDataCalculator:
         self.df = self.df.apply(pd.to_numeric, errors='coerce')
 
         # extract valid data
-        data_header_index = self.df[0].apply(pd.to_numeric, errors='coerce').first_valid_index()
-        self.data = self.df.iloc[data_header_index:, :2]
+        h_idx = self.df[0].apply(pd.to_numeric, errors='coerce').first_valid_index()
+        self.data = self.df.iloc[h_idx:, :2]
         self.data.columns = ['freq', 'pow_dBm']
         self.data['pow_mW'] = 10 ** (self.data['pow_dBm'] / 10.0)  # Convert dBm to mW
     
-    def calculate_obw(self, obw_power_percent=0.99) -> dict:
+    def calculate_obw(self, obw_pow_per=0.99) -> dict:
         # Compute cumulative power percentage
-        cumulative_percent = self.data['pow_mW'].cumsum() / self.data['pow_mW'].sum()
-        thre = (1 - float(obw_power_percent)) / 2.0
+        c_per = self.data['pow_mW'].cumsum() / self.data['pow_mW'].sum()
+        thre = (1 - float(obw_pow_per)) / 2.0
 
         # Determine OBW freq bounds based on cumulative power percentage
-        lower_freq = self.data.loc[cumulative_percent <= thre, 'freq'].iloc[-1] / 1e9       # GHz
-        upper_freq = self.data.loc[cumulative_percent >= (1 - thre), 'freq'].iloc[0] / 1e9  # GHz
-        obw = round((upper_freq - lower_freq) * 1e3, 2)  # MHz
-        return obw, lower_freq, upper_freq
+        l_freq = self.data.loc[c_per <= thre, 'freq'].iloc[-1] / 1e9       # GHz
+        r_freq = self.data.loc[c_per >= (1 - thre), 'freq'].iloc[0] / 1e9  # GHz
+        obw = round((r_freq - l_freq) * 1e3, 2)  # MHz
+        return obw, l_freq, r_freq
 
     def calculate_sbw(self, sbw_power_thre=0.1) -> dict:
         max_power = self.data['pow_mW'].max()
@@ -66,8 +66,7 @@ class TraceDataCalculator:
         
         lower_sbw = self.data.at[lower_index, 'freq']
         upper_sbw = self.data.at[upper_index, 'freq']
-        sbw = round((upper_sbw - lower_sbw) / 1e6, 2)  # MHz
-        return sbw
+        return round((upper_sbw - lower_sbw) / 1e6, 2)  # MHz
     
     def calculate_ave_power(self, window_size=100) -> float:
         moving_ave = self.data['pow_mW'].rolling(window_size).mean()
